@@ -26,9 +26,9 @@
 
 	out PORTB, rNoll
 	out PORTC, rNoll
-	out PORTC, rNoll
+	out PORTD, rNoll
 
-
+	; Kommentarer balbalbbabl
 
 	
 main:
