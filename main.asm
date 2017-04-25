@@ -14,6 +14,8 @@
 	.DEF rPORTC				= r19
 	.DEF rPORTD				= r20
 	.DEF rSnake				= r21
+	.DEF rUpdateFlag		= r22
+	.DEF rUpdateDelay		= r23
 
 	.DSEG
 	matrix: .BYTE 8
@@ -36,6 +38,7 @@ init:
 
 	ldi rTemp, 0b11111111
 	ldi rNoll, 0b00000000
+	/*
 ; Initiering av timer
 ; Pre-scaling konfigurerad genom att s�tta bit 0-2 i TCCR0B (SIDA 7 ledjoy spec)
 	ldi rTemp, 0x00
@@ -51,7 +54,7 @@ init:
 	lds rTemp, TIMSK0
 	sbr rTemp,(1<<TOIE0)
 	sts TIMSK0, rTemp
-
+	*/
 	out DDRB, rTemp
 	out DDRC, rTemp
 	out DDRD, rTemp
@@ -60,6 +63,8 @@ init:
 	out PORTB, rNoll
 	out PORTC, rNoll
 	out PORTD, rNoll
+
+	ldi rUpdateDelay, 0b00000000
 
 	
 
@@ -180,11 +185,29 @@ main:
 
 
 
+	cpi rUpdateFlag, 1
+	breq updateloop
 
 
 
 
-    rjmp main
+
+
+    jmp main
+
+
+updateloop:
+	inc rUpdateDelay
+	cpi rUpdateDelay, 15
+	brne skip
+	jmp contUpdate
+	skip:
+	ldi rUpdateFlag, 0b00000000
+	jmp main
+	
+
+contUpdate:
+	ret
 
 
 Laddarad: 
@@ -236,4 +259,5 @@ clear:
 	ret
 
 isr_timerOF:
+	ldi rUpdateFlag, 0b00000001
 	reti
