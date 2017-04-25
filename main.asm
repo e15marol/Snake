@@ -16,7 +16,15 @@
 	.DEF rSnake				= r21
 
 	.DSEG
-	matrix: .BYTE = 8
+	matrix: .BYTE 8
+
+	.CSEG
+	// Interrupt vector table 
+	.ORG 0x0000 
+ 		jmp init // Reset vector 
+	.ORG 0x0020 
+ 		jmp isr_timerOF 
+	.ORG INT_VECTORS_SIZE 
 
 
 init:
@@ -44,26 +52,26 @@ init:
 	rcall clear 
  
  
- 	ldi YH, 0 
+	ldi YH, 0 
  	ldi YL, 0 
- 
- 
- 	ldi rTemp, 0b00000001 
+
+	ldi rTemp, 0b00000001 
  	std Y+0, rTemp 
-	ldi rTemp, 0b00000000 
+	ldi rTemp, 0b00000010 
  	std Y+1, rTemp 
- 	ldi rTemp, 0b00000000 
+ 	ldi rTemp, 0b00000100 
  	std Y+2, rTemp 
- 	ldi rTemp, 0b00000000 
+ 	ldi rTemp, 0b00001000 
  	std Y+3, rTemp 
- 	ldi rTemp, 0b00000000 
+ 	ldi rTemp, 0b00010000 
  	std Y+4, rTemp 
- 	ldi rTemp, 0b00000000 
+ 	ldi rTemp, 0b00100000 
  	std Y+5, rTemp 
- 	ldi rTemp, 0b00000000 
+ 	ldi rTemp, 0b01000000 
  	std Y+6, rTemp 
- 	ldi rTemp, 0b00000000 
- 	std Y+7, rTemp 
+ 	ldi rTemp, 0b10000000 
+ 	std Y+7, rTemp
+
 
 
 
@@ -71,9 +79,14 @@ init:
 
 	
 main:
+	
 
 	ldi YH, 0
 	ldi YL, 0
+	
+;	================================
+;			FIRST ROW
+;	================================
 
 	sbi PORTC, PC0	
 	ld rSnake, Y+
@@ -81,11 +94,19 @@ main:
 	rcall clear	
 	cbi PORTC, PC0
 
+;	================================
+;			SECOND ROW
+;	================================
+
 	sbi PORTC, PC1	
 	ld rSnake, Y+
 	rcall Laddarad
 	rcall clear	
 	cbi PORTC, PC1
+
+;	================================
+;			THIRD ROW
+;	================================
 
 	sbi PORTC, PC2	
 	ld rSnake, Y+
@@ -93,11 +114,29 @@ main:
 	rcall clear	
 	cbi PORTC, PC2
 
+;	================================
+;			FOURTH ROW
+;	================================
+
 	sbi PORTC, PC3	
 	ld rSnake, Y+
 	rcall Laddarad
 	rcall clear	
 	cbi PORTC, PC3
+
+;	================================
+;			FIFTH ROW
+;	================================
+
+	sbi PORTD, PD2
+	ld rSnake, Y+
+	rcall Laddarad
+	rcall clear
+	cbi PORTD, PD2
+
+;	================================
+;			SIXTH ROW
+;	================================
 
 	sbi PORTD, PD3	
 	ld rSnake, Y+
@@ -105,11 +144,19 @@ main:
 	rcall clear	
 	cbi PORTD, PD3
 
+;	================================
+;			SEVENTH ROW
+;	================================
+
 	sbi PORTD, PD4	
 	ld rSnake, Y+
 	rcall Laddarad
 	rcall clear	
 	cbi PORTD, PD4
+
+;	================================
+;			EIGTH ROW
+;	================================
 
 	sbi PORTD, PD5	
 	ld rSnake, Y+
@@ -137,6 +184,7 @@ Laddarad:
 	bst rSnake, 6 
 	bld rTemp, 7 
  	out PORTD, rTemp 
+
  	in rTemp, PORTB 
  
  
@@ -170,3 +218,8 @@ clear:
 	cbi PORTB, PB3
 	cbi PORTB, PB4
 	cbi PORTB, PB5
+
+	ret
+
+isr_timerOF:
+	reti
