@@ -39,15 +39,15 @@ init:
 
 	ldi rTemp, 0b11111111
 	ldi rNoll, 0b00000000
-	/*
-; Initiering av timer
-; Pre-scaling konfigurerad genom att s�tta bit 0-2 i TCCR0B (SIDA 7 ledjoy spec)
+	
+	; Initiering av timer
+	; Pre-scaling konfigurerad genom att s�tta bit 0-2 i TCCR0B (SIDA 7 ledjoy spec)
 	ldi rTemp, 0x00
 	in rTemp, TCCR0B
 	sbr rTemp,(1<<CS00)|(0<<CS01)|(1<<CS02)
 	out TCCR0B, rTemp
 
-; Aktivera globala avbrott genom instruktionen sei
+	; Aktivera globala avbrott genom instruktionen sei
 	sei
 
 	; Aktivera overflow-avbrottet f�r Timer0 genom att s�tta bit 0 i TIMSK0 till 1
@@ -55,7 +55,7 @@ init:
 	lds rTemp, TIMSK0
 	sbr rTemp,(1<<TOIE0)
 	sts TIMSK0, rTemp
-	*/
+	
 	
 	; A/D omvandling
 	ldi rTemp, 0x00 ;värde 0 laddas in i rTemp
