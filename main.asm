@@ -59,7 +59,7 @@ init:
 	
 	; A/D omvandling
 	ldi rTemp, 0x00 ;värde 0 laddas in i rTemp
-	lds ADMUX, rTemp ; rTemps värde laddas in i hela ADMUX och nollställer alla tidigare inställningar
+	lds rTemp, ADMUX; ADMUX värde laddas in i hela rTemp
 	sbr rTemp,(1<<REFS0)|(0<<REFS1)|(1<<ADLAR) ; Alla bitar ändras enligt instruktioner från led spec och laddas in i rTemp
 	sts ADMUX, rTemp ; Bitarna som ändrats i rTemp skickas till ADMUX register
 
