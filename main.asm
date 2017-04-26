@@ -10,12 +10,13 @@
 
 	.DEF rTemp				= r16
 	.DEF rNoll				= r17
-	.DEF rPORTB				= r18
-	.DEF rPORTC				= r19
-	.DEF rPORTD				= r20
-	.DEF rSnake				= r21
+	.DEF rDirection			= r18
+	.DEF rXvalue			= r19
+	.DEF rYvalue			= r20
+	.DEF rSnake				= r21	
 	.DEF rUpdateFlag		= r22
 	.DEF rUpdateDelay		= r23
+
 
 	.DSEG
 	matrix: .BYTE 8
@@ -55,18 +56,21 @@ init:
 	sbr rTemp,(1<<TOIE0)
 	sts TIMSK0, rTemp
 	*/
+
+	; Sätter allt som output
 	out DDRB, rTemp
 	out DDRC, rTemp
 	out DDRD, rTemp
 
+	; Sätter portarna för Y och X led i joytsticken som input
+	cbi DDRC, PC4
+	cbi DDRC, PC5
 
 	out PORTB, rNoll
 	out PORTC, rNoll
 	out PORTD, rNoll
 
 	ldi rUpdateDelay, 0b00000000
-
-	
 
 	rcall clear 
  
@@ -90,15 +94,8 @@ init:
  	std Y+6, rTemp 
  	ldi rTemp, 0b10000000 
  	std Y+7, rTemp
-
-
-
-
-
-
 	
 main:
-	
 
 	ldi YH, 0
 	ldi YL, 0
@@ -183,15 +180,8 @@ main:
 	rcall clear	
 	cbi PORTD, PD5
 
-
-
 	cpi rUpdateFlag, 1
 	breq updateloop
-
-
-
-
-
 
     jmp main
 
@@ -209,12 +199,9 @@ updateloop:
 contUpdate:
 	ret
 
-
 Laddarad: 
-
  
  	in rTemp, PORTD 
-
  
 	bst rSnake, 7 
  	bld rTemp, 6 
@@ -223,8 +210,7 @@ Laddarad:
  	out PORTD, rTemp 
 
  	in rTemp, PORTB 
- 
- 
+	 
  	bst rSnake, 5 
  	bld rTemp, 0 
  	bst rSnake, 4 
@@ -237,13 +223,10 @@ Laddarad:
  	bld rTemp, 4 
  	bst rSnake, 0 
  	bld rTemp, 5 
- 
- 
- 	out PORTB, rTemp 
- 
+	 
+ 	out PORTB, rTemp  
  
  	ret 
-
 
 clear:
 
