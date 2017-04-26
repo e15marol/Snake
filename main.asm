@@ -20,6 +20,7 @@
 
 	.DSEG
 	matrix: .BYTE 8
+	;snake: .BYTE 25
 
 	.CSEG
 	// Interrupt vector table 
