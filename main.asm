@@ -220,7 +220,7 @@ updateloop:
 
 contUpdate:
 
-; Välj x-axel 
+; Välj x-axel ;Utveckla vidare i kommentarer
  	ldi rTemp, 0x00 
  	lds rTemp, ADMUX 
  	sbr rTemp,(0<<MUX3)|(1<<MUX2)|(0<<MUX1)|(1<<MUX0) ; (0b0101 = 5) 
