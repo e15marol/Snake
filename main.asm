@@ -63,10 +63,10 @@ init:
 	sbr rTemp,(1<<REFS0)|(0<<REFS1)|(1<<ADLAR) ; Alla bitar ändras enligt instruktioner från led spec och laddas in i rTemp
 	sts ADMUX, rTemp ; Bitarna som ändrats i rTemp skickas till ADMUX register
 
-	ldi rTemp 0x00	
-	lds ADSCRA, rTemp ; värde 0 laddas in i ADSCRA
+	ldi rTemp, 0x00	
+	lds rTemp, ADCSRA ; värde 0 laddas in i ADSCRA
 	sbr rTemp,(1<<ADPS0)|(1<<ADPS1)|(1<<ADPS2)|(1<<ADEN)
-	sts ADSCRA, rTemp ;Värdet på bitarna som ändrats i rTemp sätts in i ADSCRA
+	sts ADCSRA, rTemp ;Värdet på bitarna som ändrats i rTemp sätts in i ADSCRA
 
 	; Sätter allt som output
 	out DDRB, rTemp
@@ -82,6 +82,7 @@ init:
 	out PORTD, rNoll
 
 	ldi rUpdateDelay, 0b00000000
+	ldi rXvalue, 0b00000000
 
 	rcall clear 
  
@@ -89,25 +90,34 @@ init:
 	ldi YH, 0 
  	ldi YL, 0 
 
-	ldi rTemp, 0b00000001 
+	ldi rTemp, 0b00000000
  	std Y+0, rTemp 
-	ldi rTemp, 0b00000010 
+	ldi rTemp, 0b00000000 
  	std Y+1, rTemp 
- 	ldi rTemp, 0b00000100 
+ 	ldi rTemp, 0b00000000 
  	std Y+2, rTemp 
- 	ldi rTemp, 0b00001000 
+ 	ldi rTemp, 0b00000000 
  	std Y+3, rTemp 
- 	ldi rTemp, 0b00010000 
+ 	ldi rTemp, 0b00000000 
  	std Y+4, rTemp 
- 	ldi rTemp, 0b00100000 
+ 	ldi rTemp, 0b00000000 
  	std Y+5, rTemp 
- 	ldi rTemp, 0b01000000 
+ 	ldi rTemp, 0b00000000 
  	std Y+6, rTemp 
- 	ldi rTemp, 0b10000000 
+ 	ldi rTemp, 0b00000000 
  	std Y+7, rTemp
 	
 main:
 
+	sbi PORTC, PC0
+	;lds rSnake, rXvalue
+	rcall Laddarad
+	rcall clear
+	;cbi PORTC, PC0
+
+
+
+/*
 	ldi YH, 0
 	ldi YL, 0
 	
@@ -189,7 +199,7 @@ main:
 	ld rSnake, Y+
 	rcall Laddarad
 	rcall clear	
-	cbi PORTD, PD5
+	cbi PORTD, PD5*/
 
 	cpi rUpdateFlag, 1
 	breq updateloop
@@ -208,6 +218,33 @@ updateloop:
 	
 
 contUpdate:
+
+; Välj x-axel 
+ 	ldi rTemp, 0x00 
+ 	lds rTemp, ADMUX 
+ 	sbr rTemp,(0<<MUX3)|(1<<MUX2)|(0<<MUX1)|(1<<MUX0) ; (0b0101 = 5) 
+ 	sts ADMUX, rTemp 
+ 
+ 
+ 	; Starta A/D-konvertering.  
+ 	ldi rTemp, 0x00 
+ 	lds rTemp, ADCSRA		; Get ADCSRA 
+ 	sbr rTemp,(1<<ADSC)		; Starta konvertering ---> ADSC = 1 (bit 6) 
+ 	sts ADCSRA, rTemp		; Ladda in 
+ 	 
+iterate_x: 
+ 	ldi rTemp, 0x00 
+ 	lds rTemp, ADCSRA		; Ta nuvarande ADCSRA för att jämföra 
+ 	sbrc rTemp, 6			; Kolla om bit 6 (ADSC) är 0 i rSettings (reflekterar ADCSRA) (instruktion = Skip next instruction if bit in register is cleared) ; Alltså om ej cleared, iterera. 	 
+ 	jmp iterate_x			; Iterera 
+ 	nop 
+ 
+ 
+ 	lds rXvalue, ADCH	; Läs av (kopiera) ADCH, som är de 8 bitarna.  
+	lds rSnake, ADCH
+
+
+
 	ret
 
 Laddarad: 
