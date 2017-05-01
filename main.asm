@@ -210,12 +210,12 @@ main:
 
 
 updateloop: 
-	inc rUpdateDelay
+	inc rUpdateDelay ;Inkrementering av rUpdateDelay
 	cpi rUpdateDelay, 15 ; Uppdaterar efter var 15:e interrupt
-	brne skip
+	brne skip ; Om inte 15 interrupts inte har gått så skippas contUpdate
 	jmp contUpdate
 	skip:
-	ldi rUpdateFlag, 0b00000000
+	ldi rUpdateFlag, 0b00000000 ; rUpdateFlag nollställs inför nästa interrupt
 	jmp main
 	
 
