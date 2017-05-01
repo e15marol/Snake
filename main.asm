@@ -6,8 +6,7 @@
 ;
 
 
-; Replace with your application code
-
+; Registerdefinitioner
 	.DEF rTemp				= r16
 	.DEF rNoll				= r17
 	.DEF rDirection			= r18
@@ -17,7 +16,7 @@
 	.DEF rUpdateFlag		= r22
 	.DEF rUpdateDelay		= r23
 
-
+; Datasegment
 	.DSEG
 	matrix: .BYTE 8
 	;snake: .BYTE 25
@@ -32,11 +31,11 @@
 
 
 init:
-    // Sätt stackpekaren till högsta minnesadressen
+    // Sätt stackpekaren till högsta minnesadressen. Detta initialiseras först för att vi ska kunna använda oss utav push och pop-instruktionerna. 
     ldi rTemp, HIGH(RAMEND)
-    out SPH, rTemp
+    out SPH, rTemp ; Stackpointer High
     ldi rTemp, LOW(RAMEND)
-    out SPL, rTemp
+    out SPL, rTemp ; Stackpointer Low
 
 	ldi rTemp, 0b11111111
 	ldi rNoll, 0b00000000
@@ -45,7 +44,7 @@ init:
 	; Pre-scaling konfigurerad genom att s�tta bit 0-2 i TCCR0B (SIDA 7 ledjoy spec)
 	ldi rTemp, 0x00
 	in rTemp, TCCR0B
-	sbr rTemp,(1<<CS00)|(0<<CS01)|(1<<CS02)
+	sbr rTemp,(1<<CS00)|(0<<CS01)|(1<<CS02) ; Timern ökas med 1 för varje 1024:e klockcykel
 	out TCCR0B, rTemp
 
 	; Aktivera globala avbrott genom instruktionen sei
@@ -59,9 +58,10 @@ init:
 	
 	
 	; A/D omvandling
+
 	ldi rTemp, 0x00 ;värde 0 laddas in i rTemp
 	lds rTemp, ADMUX; ADMUX värde laddas in i hela rTemp
-	sbr rTemp,(1<<REFS0)|(0<<REFS1)|(1<<ADLAR) ; Alla bitar ändras enligt instruktioner från led spec och laddas in i rTemp
+	sbr rTemp,(1<<REFS0)|(0<<REFS1)|(1<<ADLAR) ; Alla bitar ändras enligt instruktioner från led spec och laddas in i rTemp, genom att sätta ADLAR till 1 så ställer vi in A/D omvandlaren till 8-bitarsläge.
 	sts ADMUX, rTemp ; Bitarna som ändrats i rTemp skickas till ADMUX register
 
 	ldi rTemp, 0x00	
@@ -87,10 +87,11 @@ init:
 
 	rcall clear 
  
- 
-	ldi YH, 0 
+				; Pekarregister (YH/YL) Dessa tillåter åtkomst direkt till platsen de pekar till
+	ldi YH, 0	; Sätter värdet 0 på högsta och lägsta delen av Y-adressen
  	ldi YL, 0 
 
+	; Värden laddas in i rTemp som sedan skriver ut det till de olika raderna (Y+0, Y+1, Y+2, osv).
 	ldi rTemp, 0b00000000
  	std Y+0, rTemp 
 	ldi rTemp, 0b00000000 
@@ -208,9 +209,9 @@ main:
     jmp main
 
 
-updateloop:
+updateloop: 
 	inc rUpdateDelay
-	cpi rUpdateDelay, 15
+	cpi rUpdateDelay, 15 ; Uppdaterar efter var 15:e interrupt
 	brne skip
 	jmp contUpdate
 	skip:
@@ -220,10 +221,10 @@ updateloop:
 
 contUpdate:
 
-; Välj x-axel ;Utveckla vidare i kommentarer
+; Välj x-axel 
  	ldi rTemp, 0x00 
  	lds rTemp, ADMUX 
- 	sbr rTemp,(0<<MUX3)|(1<<MUX2)|(0<<MUX1)|(1<<MUX0) ; (0b0101 = 5) 
+ 	sbr rTemp,(0<<MUX3)|(1<<MUX2)|(0<<MUX1)|(1<<MUX0) ; (0b0101 = 5) Dessa är de lägsta bitarna i ADMUX och genom att sätta dessa väljer man analogingång på ledjoyen. I detta fall har vi valt analogingång 5 (0b0101).
  	sts ADMUX, rTemp 
  
  
