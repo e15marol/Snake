@@ -7,12 +7,12 @@
 
 
 ; Registerdefinitioner
-	.DEF rTemp				= r16
-	.DEF rNoll				= r17
+	.DEF rTemp			= r16
+	.DEF rNoll			= r17
 	.DEF rDirection			= r18
 	.DEF rXvalue			= r19
 	.DEF rYvalue			= r20
-	.DEF rSnake				= r21	
+	.DEF rSnake			= r21	
 	.DEF rUpdateFlag		= r22
 	.DEF rUpdateDelay		= r23
 
@@ -20,6 +20,7 @@
 	.DSEG
 	matrix: .BYTE 8
 	;snake: .BYTE 25
+	;apple: .BYTE 25
 
 	.CSEG
 	// Interrupt vector table 
@@ -89,8 +90,8 @@ init:
 
 	rcall clear 
  
-				; Pekarregister (YH/YL) Dessa tillåter åtkomst direkt till platsen de pekar till
-	ldi YH, 0	; Sätter värdet 0 på högsta och lägsta delen av Y-adressen
+	; Pekarregister (YH/YL) Dessa tillåter åtkomst direkt till platsen de pekar till
+	ldi YH, 0 ; Sätter värdet 0 på högsta och lägsta delen av Y-adressen
  	ldi YL, 0 
 
 	; Värden laddas in i rTemp som sedan skriver ut det till de olika raderna (Y+0, Y+1, Y+2, osv).
