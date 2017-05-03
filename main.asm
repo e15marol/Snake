@@ -206,8 +206,8 @@ main:
 	rcall clear	
 	cbi PORTD, PD5*/
 
-	cpi rUpdateFlag, 1
-	breq updateloop
+	cpi rUpdateFlag, 1 ;Jämför om rUpdateFlag är detsamma som värdet 1
+	breq updateloop ;Branchar till updateloop ifall rUpdateFlag har samma värde som 1
 
     jmp main
 
