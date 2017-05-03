@@ -9,12 +9,12 @@
 ; Registerdefinitioner
 	.DEF rTemp			= r16
 	.DEF rNoll			= r17
-	.DEF rDirection			= r18
-	.DEF rXvalue			= r19
-	.DEF rYvalue			= r20
+	.DEF rDirection		= r18
+	.DEF rXvalue		= r19
+	.DEF rYvalue		= r20
 	.DEF rSnake			= r21	
-	.DEF rUpdateFlag		= r22
-	.DEF rUpdateDelay		= r23
+	.DEF rUpdateFlag	= r22
+	.DEF rUpdateDelay	= r23
 
 ; Datasegment
 	.DSEG
@@ -94,12 +94,12 @@ init:
 	ldi YH, 0 ; Sätter värdet 0 på högsta och lägsta delen av Y-adressen
  	ldi YL, 0 
 
-	; Värden laddas in i rTemp som sedan skriver ut det till de olika raderna (Y+0, Y+1, Y+2, osv).
-	ldi rTemp, 0b00000000
+	/*; Värden laddas in i rTemp som sedan skriver ut det till de olika raderna (Y+0, Y+1, Y+2, osv).
+	ldi rTemp, 0b11111111
  	std Y+0, rTemp 
 	ldi rTemp, 0b00000000 
  	std Y+1, rTemp 
- 	ldi rTemp, 0b00000000 
+ 	ldi rTemp, 0b00000000 ;fel
  	std Y+2, rTemp 
  	ldi rTemp, 0b00000000 
  	std Y+3, rTemp 
@@ -107,22 +107,58 @@ init:
  	std Y+4, rTemp 
  	ldi rTemp, 0b00000000 
  	std Y+5, rTemp 
- 	ldi rTemp, 0b00000000 
+ 	ldi rTemp, 0b00000000 ;fel
  	std Y+6, rTemp 
  	ldi rTemp, 0b00000000 
  	std Y+7, rTemp
-	
+	*/
+	ld rTemp, Y
+	ldi rTemp, 0b11111111
+	st Y+, rTemp
+
+	ld rTemp, Y
+	ldi rTemp, 0b00000000
+	st Y+, rTemp
+
+	ld rTemp, Y
+	ldi rTemp, 0b00000000
+	st Y+, rTemp
+
+	ld rTemp, Y
+	ldi rTemp, 0b00000000
+	st Y+, rTemp
+
+	ld rTemp, Y
+	ldi rTemp, 0b00000000
+	st Y+, rTemp
+
+	ld rTemp, Y
+	ldi rTemp, 0b00000000
+	st Y+, rTemp
+
+	ld rTemp, Y
+	ldi rTemp, 0b00000000
+	st Y+, rTemp
+
+	ld rTemp, Y
+	ldi rTemp, 0b00000000
+	st Y+, rTemp
+
+
+
 main:
+/*
+	ldi YH, 0
+	ldi YL, 0
 
 	sbi PORTC, PC0
-	;lds rSnake, rXvalue
+	ld rSnake, Y
 	rcall Laddarad
 	rcall clear
-	;cbi PORTC, PC0
+	cbi PORTC, PC0
+	*/
 
-
-
-/*
+	
 	ldi YH, 0
 	ldi YL, 0
 	
@@ -204,7 +240,7 @@ main:
 	ld rSnake, Y+
 	rcall Laddarad
 	rcall clear	
-	cbi PORTD, PD5*/
+	cbi PORTD, PD5
 
 	cpi rUpdateFlag, 1 ;Jämför om rUpdateFlag är detsamma som värdet 1
 	breq updateloop ;Branchar till updateloop ifall rUpdateFlag har samma värde som 1
@@ -216,7 +252,7 @@ updateloop:
 	inc rUpdateDelay ;Inkrementering av rUpdateDelay
 	cpi rUpdateDelay, 15 ; Uppdaterar efter var 15:e interrupt
 	brne skip ; Om inte 15 interrupts inte har gått så skippas contUpdate
-	jmp contUpdate
+	rcall contUpdate
 	skip:
 	ldi rUpdateFlag, 0b00000000 ; rUpdateFlag nollställs inför nästa interrupt
 	jmp main
@@ -292,23 +328,53 @@ iterate_x:
 
 	jmp checkdir
 	go_left: 
- 		ldi rDirection, 0b01000000 
+ 		ldi rDirection, 1 
  	jmp checkdir 
  	go_right: 
- 		ldi rDirection, 0b00000010 
+ 		ldi rDirection, 2
  	jmp checkdir 
  	go_up: 
- 		ldi rDirection, 0b00001000 
+ 		ldi rDirection, 4
  	jmp checkdir 
  	go_down: 
- 		ldi rDirection, 0b00100000
+ 		ldi rDirection, 8
 
 
 checkdir:
-		mov rSnake, rDirection
 
-
+		ldi YH, 0
+		ldi YL, 0
 		
+		cpi rDirection, 1
+		breq left
+
+		cpi rDirection, 2
+		breq right
+
+		cpi rDirection, 4
+		breq up
+
+		cpi rDirection, 8
+		breq down
+
+		ret
+
+		left:
+		ld rTemp, Y
+		lsl rTemp
+		st Y, rTemp
+		ret
+
+		right:
+		ld rTemp, Y
+		lsr rTemp
+		st Y, rTemp
+		ret
+		up:
+		ret
+
+		down:
+		ret
 	ret
 
 Laddarad: 
