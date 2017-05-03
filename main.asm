@@ -15,6 +15,7 @@
 	.DEF rSnake			= r21	
 	.DEF rUpdateFlag	= r22
 	.DEF rUpdateDelay	= r23
+	.DEF rCounter       = r24
 
 ; Datasegment
 	.DSEG
@@ -38,8 +39,7 @@ init:
     ldi rTemp, LOW(RAMEND)
     out SPL, rTemp ; Stackpointer Low
 
-	ldi rTemp, 0b11111111
-	ldi rNoll, 0b00000000
+	
 	
 	; Initiering av timer
 	; Pre-scaling konfigurerad genom att s�tta bit 0-2 i TCCR0B (SIDA 7 ledjoy spec)
@@ -70,6 +70,9 @@ init:
 	sbr rTemp,(1<<ADPS0)|(1<<ADPS1)|(1<<ADPS2)|(1<<ADEN)
 	sts ADCSRA, rTemp ;Värdet på bitarna som ändrats i rTemp sätts in i ADSCRA
 
+	ldi rTemp, 0b11111111
+	ldi rNoll, 0b00000000
+
 	; Sätter allt som output
 	out DDRB, rTemp
 	out DDRC, rTemp
@@ -87,6 +90,7 @@ init:
 	ldi rXvalue, 0b00000000
 	ldi rYvalue, 0b00000000
 	ldi rDirection, 0b00000000
+	ldi rCounter, 0b00000000
 
 	rcall clear 
  
@@ -94,26 +98,9 @@ init:
 	ldi YH, 0 ; Sätter värdet 0 på högsta och lägsta delen av Y-adressen
  	ldi YL, 0 
 
-	/*; Värden laddas in i rTemp som sedan skriver ut det till de olika raderna (Y+0, Y+1, Y+2, osv).
-	ldi rTemp, 0b11111111
- 	std Y+0, rTemp 
-	ldi rTemp, 0b00000000 
- 	std Y+1, rTemp 
- 	ldi rTemp, 0b00000000 ;fel
- 	std Y+2, rTemp 
- 	ldi rTemp, 0b00000000 
- 	std Y+3, rTemp 
- 	ldi rTemp, 0b00000000 
- 	std Y+4, rTemp 
- 	ldi rTemp, 0b00000000 
- 	std Y+5, rTemp 
- 	ldi rTemp, 0b00000000 ;fel
- 	std Y+6, rTemp 
- 	ldi rTemp, 0b00000000 
- 	std Y+7, rTemp
-	*/
+	
 	ld rTemp, Y
-	ldi rTemp, 0b11111111
+	ldi rTemp, 0b00000001
 	st Y+, rTemp
 
 	ld rTemp, Y
@@ -147,16 +134,6 @@ init:
 
 
 main:
-/*
-	ldi YH, 0
-	ldi YL, 0
-
-	sbi PORTC, PC0
-	ld rSnake, Y
-	rcall Laddarad
-	rcall clear
-	cbi PORTC, PC0
-	*/
 
 	
 	ldi YH, 0
@@ -341,9 +318,16 @@ iterate_x:
 
 
 checkdir:
-
 		ldi YH, 0
 		ldi YL, 0
+		ldi rCounter, 0
+
+
+
+
+checkdircont:
+
+	
 		
 		cpi rDirection, 1
 		breq left
@@ -357,25 +341,40 @@ checkdir:
 		cpi rDirection, 8
 		breq down
 
-		ret
+		jmp outsidecheckdone
 
 		left:
-		ld rTemp, Y
-		lsl rTemp
-		st Y, rTemp
-		ret
+			ld rTemp, Y
+			lsl rTemp
+			st Y, rTemp
+			jmp outsidecheckdone
 
 		right:
-		ld rTemp, Y
-		lsr rTemp
-		st Y, rTemp
-		ret
+			ld rTemp, Y
+			lsr rTemp
+			st Y, rTemp
+			jmp outsidecheckdone
 		up:
-		ret
+			jmp outsidecheckdone
 
 		down:
-		ret
+			jmp outsidecheckdone
 	ret
+
+outsidecheckdone: 
+ 	cpi rCounter, 8 
+ 	breq done 
+ 	 
+ cont: 
+ 	inc rCounter 
+ 
+ 
+ 	ld rTemp, Y+ 
+ 	jmp checkdircont 
+ done: 
+ 	ret 
+
+
 
 Laddarad: 
  
