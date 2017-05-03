@@ -238,7 +238,7 @@ updateloop:
 
 contUpdate:
 
-	ldi rUpdatedelay, 0b00000000
+	ldi rUpdatedelay, 0b00000000 ; utan denna rad så kommer ingen rendering ske under updateloop
 
 ; Välj x-axel 
  	ldi rTemp, 0x00 
@@ -307,7 +307,7 @@ iterate_x:
 
 
 	jmp checkdir
-	go_left: 
+	go_left:
  		ldi rDirection, 1 
  	jmp checkdir 
  	go_right: 
