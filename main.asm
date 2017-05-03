@@ -105,31 +105,31 @@ init:
 	st Y+, rTemp
 
 	ld rTemp, Y
-	ldi rTemp, 0b00000010
+	ldi rTemp, 0b00000000
 	st Y+, rTemp
 
 	ld rTemp, Y
-	ldi rTemp, 0b00000100
+	ldi rTemp, 0b00000000
 	st Y+, rTemp
 
 	ld rTemp, Y
-	ldi rTemp, 0b00001000
+	ldi rTemp, 0b00000000
 	st Y+, rTemp
 
 	ld rTemp, Y
-	ldi rTemp, 0b00010000
+	ldi rTemp, 0b00000000
 	st Y+, rTemp
 
 	ld rTemp, Y
-	ldi rTemp, 0b00100000
+	ldi rTemp, 0b00000000
 	st Y+, rTemp
 
 	ld rTemp, Y
-	ldi rTemp, 0b01000000
+	ldi rTemp, 0b00000000
 	st Y+, rTemp
 
 	ld rTemp, Y
-	ldi rTemp, 0b10000000
+	ldi rTemp, 0b00000000
 	st Y+, rTemp
 
 
@@ -358,11 +358,64 @@ checkdircont:
 			lsr rTemp
 			st Y, rTemp
 			jmp outsidecheck
-		up:
-			jmp outsidecheckdone
+		up: 
+ 	 
+ 		cpi YL, 0 
+ 		breq checkhighrow 
+ 		ld rTemp, Y 
+ 		cpi rTemp, 0 
+ 			brne moveup 
+ 				jmp outsidecheckdone 
+ 				moveup: 
+ 					st Y, rNoll 
+ 					subi YL, 1 
+ 					st Y, rTemp 
+ 			jmp outsidecheckdone 
+ 
+ 
+ 			checkhighrow: 
+ 				ld rTemp, Y 
+ 				cpi rTemp, 0 
+ 					brne movehigh 
+ 					jmp outsidecheckdone 
+ 					movehigh: 
+ 						st Y, rNoll 
+ 						ldi YL, 7 
+ 						st Y, rTemp 
+ 		 
+ 		jmp outsidecheckdone 
 
-		down:
-			jmp outsidecheckdone
+
+		down:  
+ 		cpi YL, 7 
+ 		breq checklowrow 
+ 		ld rTemp, Y 
+ 		cpi rTemp, 0 
+ 		brne movedown 
+ 			jmp outsidecheckdone 
+ 			movedown: 
+ 				st Y+, rNoll 
+ 				st Y, rTemp 
+ 
+ 
+ 		jmp outsidecheckdone 
+ 
+ 
+ 		checklowrow: 
+ 			ld rTemp, Y 
+ 			cpi rTemp, 0 
+ 				brne movelow 
+ 				jmp outsidecheckdone 
+ 				movelow: 
+ 					st Y, rNoll 
+ 					ldi YL, 0 
+ 					st Y, rTemp 
+ 
+ 
+ 
+ 
+ 		jmp outsidecheckdone 
+
 
 			
 
