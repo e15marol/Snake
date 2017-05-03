@@ -39,6 +39,18 @@ init:
     ldi rTemp, LOW(RAMEND)
     out SPL, rTemp ; Stackpointer Low
 
+	ldi rTemp, 0b11111111
+	ldi rNoll, 0b00000000
+
+	; Sätter allt som output
+	out DDRB, rTemp
+	out DDRC, rTemp
+	out DDRD, rTemp
+
+	; Sätter portarna för Y och X led i joytsticken som input
+	cbi DDRC, PC4
+	cbi DDRC, PC5
+
 	
 	
 	; Initiering av timer
@@ -70,17 +82,6 @@ init:
 	sbr rTemp,(1<<ADPS0)|(1<<ADPS1)|(1<<ADPS2)|(1<<ADEN)
 	sts ADCSRA, rTemp ;Värdet på bitarna som ändrats i rTemp sätts in i ADSCRA
 
-	ldi rTemp, 0b11111111
-	ldi rNoll, 0b00000000
-
-	; Sätter allt som output
-	out DDRB, rTemp
-	out DDRC, rTemp
-	out DDRD, rTemp
-
-	; Sätter portarna för Y och X led i joytsticken som input
-	cbi DDRC, PC4
-	cbi DDRC, PC5
 
 	out PORTB, rNoll
 	out PORTC, rNoll
@@ -104,31 +105,31 @@ init:
 	st Y+, rTemp
 
 	ld rTemp, Y
-	ldi rTemp, 0b00000000
+	ldi rTemp, 0b00000010
 	st Y+, rTemp
 
 	ld rTemp, Y
-	ldi rTemp, 0b00000000
+	ldi rTemp, 0b00000100
 	st Y+, rTemp
 
 	ld rTemp, Y
-	ldi rTemp, 0b00000000
+	ldi rTemp, 0b00001000
 	st Y+, rTemp
 
 	ld rTemp, Y
-	ldi rTemp, 0b00000000
+	ldi rTemp, 0b00010000
 	st Y+, rTemp
 
 	ld rTemp, Y
-	ldi rTemp, 0b00000000
+	ldi rTemp, 0b00100000
 	st Y+, rTemp
 
 	ld rTemp, Y
-	ldi rTemp, 0b00000000
+	ldi rTemp, 0b01000000
 	st Y+, rTemp
 
 	ld rTemp, Y
-	ldi rTemp, 0b00000000
+	ldi rTemp, 0b10000000
 	st Y+, rTemp
 
 
@@ -237,6 +238,8 @@ updateloop:
 
 contUpdate:
 
+	ldi rUpdatedelay, 0b00000000
+
 ; Välj x-axel 
  	ldi rTemp, 0x00 
  	lds rTemp, ADMUX 
@@ -299,7 +302,7 @@ iterate_x:
  
  	cpi rYvalue, 91 
  	brlo go_down 
-
+	
 
 
 
@@ -310,12 +313,13 @@ iterate_x:
  	go_right: 
  		ldi rDirection, 2
  	jmp checkdir 
+	
  	go_up: 
  		ldi rDirection, 4
  	jmp checkdir 
  	go_down: 
  		ldi rDirection, 8
-
+		
 
 checkdir:
 		ldi YH, 0
@@ -334,32 +338,61 @@ checkdircont:
 
 		cpi rDirection, 2
 		breq right
-
+		
 		cpi rDirection, 4
 		breq up
 
 		cpi rDirection, 8
 		breq down
-
+		
 		jmp outsidecheckdone
 
 		left:
 			ld rTemp, Y
 			lsl rTemp
 			st Y, rTemp
-			jmp outsidecheckdone
+			jmp outsidecheck
 
 		right:
 			ld rTemp, Y
 			lsr rTemp
 			st Y, rTemp
-			jmp outsidecheckdone
+			jmp outsidecheck
 		up:
 			jmp outsidecheckdone
 
 		down:
 			jmp outsidecheckdone
-	ret
+
+			
+
+		outsidecheck: 
+ 
+ 
+ 	brcc outsidecheckdone	; Kontrollera om Carry är cleared 
+ 
+ 
+ 	cpi rDirection, 1		;  
+ 	breq outsideleft 
+ 
+ 
+ 	cpi rDirection, 2 
+ 	breq outsideRight 
+ 
+ 
+ 	outsideleft: 
+ 	ldi rTemp, 1 
+ 	st Y, rTemp 
+ 	clc 
+ 	jmp outsidecheckdone 
+ 
+ 
+ 	outsideright: 
+ 	ldi rTemp, 128 
+ 	st Y, rTemp 
+ 	clc 
+
+	
 
 outsidecheckdone: 
  	cpi rCounter, 8 
