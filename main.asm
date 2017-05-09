@@ -12,12 +12,11 @@
 	.DEF rDirection		= r18
 	.DEF rXvalue		= r19
 	.DEF rYvalue		= r20
-	.DEF rSnake			= r21	
+	.DEF rYKord			= r21	
 	.DEF rUpdateFlag	= r22
 	.DEF rUpdateDelay	= r23
 	.DEF rCounter       = r24
 	.DEF rXkord			= r25
-	.DEF rYkord			= r26
 
 ; Datasegment
 	.DSEG
@@ -105,13 +104,13 @@ main:
 
 	rcall clear
 
-	; Kordinatsystem införs i koden
+
 	rad1:
-	cpi rYkord, 1 ; Kolla ifall rYkord har ett värde lika med 1
-	brne rad2 ; Om inte skippa till rad2
-	sbi PORTC, PC0 ; Set bit i PORTC, PC0 (Alltså första raden)
-	rcall laddarad 
-	rcall clear ; Kalla till clear för att sätta värdet 0 på alla kolumner	
+	cpi rYkord, 1
+	brne rad2
+	sbi PORTC, PC0
+	rcall laddarad
+	rcall clear
 	cbi PORTC, PC0
 
 	rad2:
@@ -274,10 +273,10 @@ iterate_x:
 		
 
 checkdir:
-		ldi YH, 0
+		/*ldi YH, 0
 		ldi YL, 0
 		ldi rCounter, 0
-
+		*/
 
 
 
@@ -300,116 +299,58 @@ checkdircont:
 		jmp outsidecheckdone
 
 		left:
-			ld rTemp, Y
-			lsl rTemp
-			st Y, rTemp
-			jmp outsidecheck
+		cpi rXkord, 128
+		brsh outsideleft
+
+		lsl rXkord
+		jmp outsidecheckdone
+		
+		
 
 		right:
-			ld rTemp, Y
-			lsr rTemp
-			st Y, rTemp
-			jmp outsidecheck
-		up: 
- 	 
- 		cpi YL, 0 
- 		breq checkhighrow 
- 		ld rTemp, Y 
- 		cpi rTemp, 0 
- 			brne moveup 
- 				jmp outsidecheckdone 
- 				moveup: 
- 					st Y, rNoll 
- 					subi YL, 1 
- 					st Y, rTemp 
- 			jmp outsidecheckdone 
- 
- 
- 			checkhighrow: 
- 				ld rTemp, Y 
- 				cpi rTemp, 0 
- 					brne movehigh 
- 					jmp outsidecheckdone 
- 					movehigh: 
- 						st Y, rNoll 
- 						ldi YL, 7 
- 						st Y, rTemp 
- 		 
- 		jmp outsidecheckdone 
+		cpi rXkord, 2
+		brlo outsideright
 
-
-		down:  
- 		cpi YL, 7 
- 		breq checklowrow 
- 		ld rTemp, Y 
- 		cpi rTemp, 0 
- 		brne movedown 
- 			jmp outsidecheckdone 
- 			movedown: 
- 				st Y+, rNoll 
- 				st Y, rTemp 
- 
- 
- 		jmp outsidecheckdone 
- 
- 
- 		checklowrow: 
- 			ld rTemp, Y 
- 			cpi rTemp, 0 
- 				brne movelow 
- 				jmp outsidecheckdone 
- 				movelow: 
- 					st Y, rNoll 
- 					ldi YL, 0 
- 					st Y, rTemp 
- 
- 
- 
- 
- 		jmp outsidecheckdone 
-
-
+		lsr rXkord
+		jmp outsidecheckdone
 			
+		up:
+		cpi rYkord, 2
+		brlo outsideup
+		
+		lsr rYkord
+		jmp outsidecheckdone
 
-		outsidecheck: 
+
+		down:
+		cpi rYkord, 128
+		brsh outsidedown
+		
+		lsl rYkord
+		jmp outsidecheckdone
+ 
+
  
  
- 	brcc outsidecheckdone	; Kontrollera om Carry är cleared 
- 
- 
- 	cpi rDirection, 1		;  
- 	breq outsideleft 
- 
- 
- 	cpi rDirection, 2 
- 	breq outsideRight 
- 
- 
- 	outsideleft: 
- 	ldi rTemp, 1 
- 	st Y, rTemp 
- 	clc 
- 	jmp outsidecheckdone 
- 
- 
- 	outsideright: 
- 	ldi rTemp, 128 
- 	st Y, rTemp 
- 	clc 
+ 	outsideleft:
+	ldi rXkord, 1 
+	jmp outsidecheckdone
+
+ 	outsideright:
+	ldi rXkord, 128
+	jmp outsidecheckdone
+		
+	outsideup:
+	ldi rYkord, 128
+	jmp outsidecheckdone
+
+	outsidedown: 
+	ldi rYkord, 1
 
 	
 
 outsidecheckdone: 
- 	cpi rCounter, 8 
- 	breq done 
- 	 
- cont: 
- 	inc rCounter 
  
- 
- 	ld rTemp, Y+ 
- 	jmp checkdircont 
- done: 
  	ret 
 
 
