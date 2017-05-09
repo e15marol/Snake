@@ -105,13 +105,13 @@ main:
 
 	rcall clear
 
-
+	; Kordinatsystem införs i koden
 	rad1:
-	cpi rYkord, 1
-	brne rad2
-	sbi PORTC, PC0
-	rcall laddarad
-	rcall clear
+	cpi rYkord, 1 ; Kolla ifall rYkord har ett värde lika med 1
+	brne rad2 ; Om inte skippa till rad2
+	sbi PORTC, PC0 ; Set bit i PORTC, PC0 (Alltså första raden)
+	rcall laddarad 
+	rcall clear ; Kalla till clear för att sätta värdet 0 på alla kolumner	
 	cbi PORTC, PC0
 
 	rad2:
