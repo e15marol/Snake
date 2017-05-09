@@ -106,11 +106,11 @@ main:
 
 
 	rad1:
-	cpi rYkord, 1
-	brne rad2
-	sbi PORTC, PC0
-	rcall laddarad
-	rcall clear
+	cpi rYkord, 1 ; Kollar ifall rYkord har ett värde lika med 1
+	brne rad2 ; Om inte skippar den till rad 2
+	sbi PORTC, PC0 ; setbit i PORTC, PC0 för att aktivera rad
+	rcall laddarad 
+	rcall clear ; Kallar till clear för att cleara kolumner 
 	cbi PORTC, PC0
 
 	rad2:
