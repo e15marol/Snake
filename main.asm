@@ -16,6 +16,8 @@
 	.DEF rUpdateFlag	= r22
 	.DEF rUpdateDelay	= r23
 	.DEF rCounter       = r24
+	.DEF rXkord			= r25
+	.DEF rYkord			= r26
 
 ; Datasegment
 	.DSEG
@@ -93,132 +95,82 @@ init:
 	ldi rDirection, 0b00000000
 	ldi rCounter, 0b00000000
 
-	rcall clear 
- 
-	; Pekarregister (YH/YL) Dessa tillåter åtkomst direkt till platsen de pekar till
-	ldi YH, 0 ; Sätter värdet 0 på högsta och lägsta delen av Y-adressen
- 	ldi YL, 0 
+	rcall clear 	
 
-	
-	ld rTemp, Y
-	ldi rTemp, 0b00000001
-	st Y+, rTemp
-
-	ld rTemp, Y
-	ldi rTemp, 0b00000000
-	st Y+, rTemp
-
-	ld rTemp, Y
-	ldi rTemp, 0b00000000
-	st Y+, rTemp
-
-	ld rTemp, Y
-	ldi rTemp, 0b00000000
-	st Y+, rTemp
-
-	ld rTemp, Y
-	ldi rTemp, 0b00000000
-	st Y+, rTemp
-
-	ld rTemp, Y
-	ldi rTemp, 0b00000000
-	st Y+, rTemp
-
-	ld rTemp, Y
-	ldi rTemp, 0b00000000
-	st Y+, rTemp
-
-	ld rTemp, Y
-	ldi rTemp, 0b00000000
-	st Y+, rTemp
-
+	ldi rXkord, 1
+	ldi rYkord, 1
 
 
 main:
 
-	
-	ldi YH, 0
-	ldi YL, 0
-	
-;	================================
-;			FIRST ROW
-;	================================
+	rcall clear
 
-	sbi PORTC, PC0	
-	ld rSnake, Y+
-	rcall Laddarad
-	rcall clear	
+
+	rad1:
+	cpi rYkord, 1
+	brne rad2
+	sbi PORTC, PC0
+	rcall laddarad
+	rcall clear
 	cbi PORTC, PC0
 
-;	================================
-;			SECOND ROW
-;	================================
-
-	sbi PORTC, PC1	
-	ld rSnake, Y+
-	rcall Laddarad
-	rcall clear	
+	rad2:
+	cpi rYkord, 2
+	brne rad3
+	sbi PORTC, PC1
+	rcall laddarad
+	rcall clear
 	cbi PORTC, PC1
 
-;	================================
-;			THIRD ROW
-;	================================
-
-	sbi PORTC, PC2	
-	ld rSnake, Y+
-	rcall Laddarad
-	rcall clear	
+	rad3:
+	cpi rYkord, 4
+	brne rad4
+	sbi PORTC, PC2
+	rcall laddarad
+	rcall clear
 	cbi PORTC, PC2
 
-;	================================
-;			FOURTH ROW
-;	================================
-
-	sbi PORTC, PC3	
-	ld rSnake, Y+
-	rcall Laddarad
-	rcall clear	
+	rad4:
+	cpi rYkord, 8
+	brne rad5
+	sbi PORTC, PC3
+	rcall laddarad
+	rcall clear
 	cbi PORTC, PC3
 
-;	================================
-;			FIFTH ROW
-;	================================
-
+	rad5:
+	cpi rYkord, 16
+	brne rad6
 	sbi PORTD, PD2
-	ld rSnake, Y+
-	rcall Laddarad
+	rcall laddarad
 	rcall clear
 	cbi PORTD, PD2
 
-;	================================
-;			SIXTH ROW
-;	================================
-
-	sbi PORTD, PD3	
-	ld rSnake, Y+
-	rcall Laddarad
-	rcall clear	
+	rad6:
+	cpi rYkord, 32
+	brne rad7
+	sbi PORTD, PD3
+	rcall laddarad
+	rcall clear
 	cbi PORTD, PD3
 
-;	================================
-;			SEVENTH ROW
-;	================================
-
-	sbi PORTD, PD4	
-	ld rSnake, Y+
-	rcall Laddarad
-	rcall clear	
+	rad7:
+	cpi rYkord, 64
+	brne rad8
+	sbi PORTD, PD4
+	rcall laddarad
+	rcall clear
 	cbi PORTD, PD4
 
-;	================================
-;			EIGTH ROW
-;	================================
-
-	sbi PORTD, PD5	
-	ld rSnake, Y+
-	rcall Laddarad
-	rcall clear	
+	rad8:
+	cpi rYkord, 128
+	brne update
+	sbi PORTD, PD5
+	rcall laddarad
+	rcall clear
 	cbi PORTD, PD5
+
+	update:
 
 	cpi rUpdateFlag, 1 ;Jämför om rUpdateFlag är detsamma som värdet 1
 	breq updateloop ;Branchar till updateloop ifall rUpdateFlag har samma värde som 1
@@ -466,25 +418,25 @@ Laddarad:
  
  	in rTemp, PORTD 
  
-	bst rSnake, 7 
+	bst rXkord, 7 
  	bld rTemp, 6 
-	bst rSnake, 6 
+	bst rXkord, 6 
 	bld rTemp, 7 
  	out PORTD, rTemp 
 
  	in rTemp, PORTB 
 	 
- 	bst rSnake, 5 
+ 	bst rXkord, 5 
  	bld rTemp, 0 
- 	bst rSnake, 4 
+ 	bst rXkord, 4 
  	bld rTemp, 1 
- 	bst rSnake, 3 
+ 	bst rXkord, 3 
  	bld rTemp, 2 
- 	bst rSnake, 2 
+ 	bst rXkord, 2 
  	bld rTemp, 3 
- 	bst rSnake, 1 
+ 	bst rXkord, 1 
  	bld rTemp, 4 
- 	bst rSnake, 0 
+ 	bst rXkord, 0 
  	bld rTemp, 5 
 	 
  	out PORTB, rTemp  
