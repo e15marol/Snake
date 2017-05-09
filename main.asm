@@ -102,74 +102,13 @@ init:
 
 main:
 
-	rcall clear
-
-
-	rad1:
-	cpi rYkord, 1
-	brne rad2
-	sbi PORTC, PC0
 	rcall laddarad
+	rcall laddarader
 	rcall clear
-	cbi PORTC, PC0
 
-	rad2:
-	cpi rYkord, 2
-	brne rad3
-	sbi PORTC, PC1
-	rcall laddarad
-	rcall clear
-	cbi PORTC, PC1
-
-	rad3:
-	cpi rYkord, 4
-	brne rad4
-	sbi PORTC, PC2
-	rcall laddarad
-	rcall clear
-	cbi PORTC, PC2
-
-	rad4:
-	cpi rYkord, 8
-	brne rad5
-	sbi PORTC, PC3
-	rcall laddarad
-	rcall clear
-	cbi PORTC, PC3
-
-	rad5:
-	cpi rYkord, 16
-	brne rad6
-	sbi PORTD, PD2
-	rcall laddarad
-	rcall clear
-	cbi PORTD, PD2
-
-	rad6:
-	cpi rYkord, 32
-	brne rad7
-	sbi PORTD, PD3
-	rcall laddarad
-	rcall clear
-	cbi PORTD, PD3
-
-	rad7:
-	cpi rYkord, 64
-	brne rad8
-	sbi PORTD, PD4
-	rcall laddarad
-	rcall clear
-	cbi PORTD, PD4
-
-	rad8:
-	cpi rYkord, 128
-	brne update
-	sbi PORTD, PD5
-	rcall laddarad
-	rcall clear
-	cbi PORTD, PD5
 
 	update:
+
 
 	cpi rUpdateFlag, 1 ;Jämför om rUpdateFlag är detsamma som värdet 1
 	breq updateloop ;Branchar till updateloop ifall rUpdateFlag har samma värde som 1
@@ -384,6 +323,36 @@ Laddarad:
  
  	ret 
 
+Laddarader: 
+ 
+ 	in rTemp, PORTC 
+ 
+	bst rYkord, 0 
+ 	bld rTemp, 0
+	bst rYkord, 1 
+	bld rTemp, 1
+	bst rYkord, 2
+	bld rTemp, 2
+	bst rYkord, 3
+	bld rTemp, 3
+	out PORTC, rTemp 
+
+ 	in rTemp, PORTD 
+	 
+ 	bst rYkord, 4 
+ 	bld rTemp, 2 
+ 	bst rYkord, 5 
+ 	bld rTemp, 3 
+ 	bst rYkord, 6 
+ 	bld rTemp, 4 
+ 	bst rYkord, 7 
+ 	bld rTemp, 5	 
+ 	out PORTD, rTemp  
+ 
+ 	ret 
+
+
+
 clear:
 
 	cbi PORTD, PD6
@@ -394,6 +363,15 @@ clear:
 	cbi PORTB, PB3
 	cbi PORTB, PB4
 	cbi PORTB, PB5
+
+	cbi PORTC, PC0
+	cbi PORTC, PC1
+	cbi PORTC, PC2
+	cbi PORTC, PC3
+	cbi PORTD, PD2
+	cbi PORTD, PD3
+	cbi PORTD, PD4
+	cbi PORTD, PD5
 
 	ret
 
