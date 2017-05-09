@@ -1,7 +1,10 @@
-se om vi kan göra tre prickar som följer efter och att få den växa när man träffar äpplen
+se om vi kan gÃ¶ra tre prickar som fÃ¶ljer efter och att fÃ¥ den vÃ¤xa nÃ¤r man trÃ¤ffar Ã¤pplen
 
-Datastruktur för att representera masken
+Datastruktur fÃ¶r att representera masken
 
-Ha en annan representation av vart pluppen är
+Ha en annan representation av vart pluppen Ã¤r
 
-Nolla allting och sätt ut 1:orna där de ska vara för att få korrekt position 
+Nolla allting och sÃ¤tt ut 1:orna dÃ¤r de ska vara fÃ¶r att fÃ¥ korrekt position 
+
+2. 
+gÃ¶ra en array med kordinater istÃ¤llet fÃ¶r en variabel
