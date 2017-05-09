@@ -1,0 +1,7 @@
+se om vi kan göra tre prickar som följer efter och att få den växa när man träffar äpplen
+
+Datastruktur för att representera masken
+
+Ha en annan representation av vart pluppen är
+
+Nolla allting och sätt ut 1:orna där de ska vara för att få korrekt position 
