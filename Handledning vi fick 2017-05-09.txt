@@ -8,3 +8,6 @@ Nolla allting och sätt ut 1:orna där de ska vara för att få korrekt position
 
 2. 
 göra en array med kordinater istället för en variabel
+
+Kristians anteckningar:
+x är jämna nummer i Y 
