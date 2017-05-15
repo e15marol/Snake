@@ -110,15 +110,27 @@ init:
 	st Y+, rXkord
 	st Y+, rYkord
 
+	ldi rXkord, 1
+	ldi rYkord, 1
+
+	st Y+, rXkord
+	st Y+, rYkord
 
 main:
 
 	ldi YH, 0
 	ldi YL, 0
-
-
+	ldi rCounter, 0
+	ladda:
 	rcall laddarad
 	rcall laddarader
+	inc rCounter
+	cp rCounter, rLength
+	breq clearmain
+	jmp ladda
+
+
+	clearmain:
 	rcall clear
 
 
@@ -239,7 +251,7 @@ checkdir:
 checkdircont:
 
 		cpi rDirection, 0
-		breq done
+		breq donedir
 		
 		cpi rDirection, 1
 		breq left
@@ -254,6 +266,9 @@ checkdircont:
 		breq down
 		
 		jmp outsidecheckdone
+		
+		donedir:
+		jmp main
 
 		left:
 		ld rTemp2, Y
@@ -309,7 +324,7 @@ checkdircont:
 
 	outsidedown: 
 	ldi rTemp2, 1
-
+	
 	
 
 outsidecheckdone: 
@@ -317,8 +332,9 @@ outsidecheckdone:
 	cpi rDirection, 4
 	brsh updown
 	
-	st Y+, rTemp2
 	inc YL
+	inc YL
+	st Y, rTemp2
 	inc rCounter
 	cp rCounter, rLength
 	breq done
@@ -326,27 +342,32 @@ outsidecheckdone:
  	jmp checkdircont 
 
 	updown:
-	
+	inc YL
+	inc YL
 	st Y, rTemp2
 	inc rCounter
 	cp rCounter, rLength
 	breq done
 
+	
 	jmp checkdircont
-
+	
 done:
 	ret
+	;jmp main
 
 Laddarad: 
 
-	ldi YH, 0
-	ldi YL, 0
+	;ldi YH, 0
+	;ldi YL, 0
 
 
  
  	in rTemp, PORTD 
 	ld rTemp2, Y+ 
 
+
+	
 	bst rTemp2, 7 
  	bld rTemp, 6 
 	bst rTemp2, 6 
@@ -375,7 +396,7 @@ Laddarad:
 Laddarader: 
  
  	in rTemp, PORTC 
-	ld rTemp2, Y
+	ld rTemp2, Y+
 
 	bst rTemp2, 0 
  	bld rTemp, 0
