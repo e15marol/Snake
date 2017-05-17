@@ -1,9 +1,4 @@
-;
-; Snake.asm
-;
-; Created: 2017-04-20 15:17:06
-; Author : a15kriel
-;
+;avrdude -C "C:\WinAVR-20100110\bin\avrdude.conf" -patmega328p -Pcom4 -carduino -b115200 -Uflash:w:Snake.hex
 
 
 ; Registerdefinitioner
