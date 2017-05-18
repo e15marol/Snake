@@ -1,17 +1,28 @@
-;avrdude -C "C:\WinAVR-20100110\bin\avrdude.conf" -patmega328p -Pcom4 -carduino -b115200 -Uflash:w:Snake.hex
+;
+; Snake.asm
+;
+; Created: 2017-04-20 15:17:06
+; Author : a15kriel
+;
 
+
+;avrdude -C "C:\WinAVR-20100110\bin\avrdude.conf" -patmega328p -Pcom4 -carduino -b115200 -Uflash:w:Snake.hex
 
 ; Registerdefinitioner
 	.DEF rTemp			= r16
-	.DEF rTemp2			= r17
 	.DEF rDirection		= r18
-	.DEF rXvalue		= r19
-	.DEF rLength		= r20
-	.DEF rYKord			= r21	
+	.DEF rLength		= r20	
 	.DEF rUpdateFlag	= r22
 	.DEF rUpdateDelay	= r23
 	.DEF rCounter       = r24
-	.DEF rXkord			= r25
+
+	/* Lediga Register 
+	r17
+	r19
+	r21
+	
+	
+	*/
 
 ; Datasegment
 	.DSEG
@@ -36,7 +47,6 @@ init:
     out SPL, rTemp ; Stackpointer Low
 
 	ldi rTemp, 0b11111111
-	ldi rTemp2, 0b00000000
 
 	; Sätter allt som output
 	out DDRB, rTemp
@@ -78,20 +88,30 @@ init:
 	sbr rTemp,(1<<ADPS0)|(1<<ADPS1)|(1<<ADPS2)|(1<<ADEN)
 	sts ADCSRA, rTemp ;Värdet på bitarna som ändrats i rTemp sätts in i ADSCRA
 
+	ldi YH, HIGH(matrix)
+	ldi YL, LOW(matrix)
 
-	out PORTB, rTemp2
-	out PORTC, rTemp2
-	out PORTD, rTemp2
+	ldi ZH, HIGH(matrix)
+	ldi ZL, LOW(matrix)
+
+
+	ldi rTemp, 0
+	out PORTB, rTemp
+	out PORTC, rTemp
+	out PORTD, rTemp
 
 	ldi rUpdateDelay, 0b00000000
 	ldi rDirection, 0b00000000
 	ldi rCounter, 0b00000000
-	ldi rLength, 2
+	ldi rLength, 1
 
 	rcall clear 	
 
-	ldi rXkord, 4
-	ldi rYkord, 1
+	.DEF rYkord = r21
+	.DEF rXkord = r25
+
+	ldi rXkord, 16
+	ldi rYkord, 2
 
 	ldi YH, 0
 	ldi YL, 0
@@ -99,40 +119,57 @@ init:
 	st Y+, rXkord
 	st Y+, rYkord
 
-	ldi rXkord, 2
-	ldi rYkord, 1
+	ldi rXkord, 8
+	ldi rYkord, 2
 
 	st Y+, rXkord
 	st Y+, rYkord
 
-	ldi rXkord, 1
-	ldi rYkord, 1
+	ldi rXkord, 4
+	ldi rYkord, 2
 
 	st Y+, rXkord
 	st Y+, rYkord
 
+	.UNDEF rYkord
+	.UNDEF rXKord
+
+	.DEF YLvalue = r25
+	ldi YLvalue, 0
+
+	ldi YH, 0
+	ldi YL, 0
+
+	ldi ZH, 0
+	ldi ZL, 0
 main:
 
-	ldi YH, 0
-	ldi YL, 0
 	ldi rCounter, 0
+
+
+	mainCont:
+	
+	cpi ZL, 6
+	brlo ladda
+
+	resetZL:
+	ldi ZL, 0
+	jmp mainCont
+
+
 	ladda:
 	rcall laddarad
 	rcall laddarader
-	inc rCounter
-	cp rCounter, rLength
-	breq clearmain
-	jmp ladda
-
-
-	clearmain:
 	rcall clear
 
+	inc rCounter
+	cpi rCounter, 2
+	breq update
 
 
+	jmp mainCont
 
 	update:
-
 
 	cpi rUpdateFlag, 1 ;Jämför om rUpdateFlag är detsamma som värdet 1
 	breq updateloop ;Branchar till updateloop ifall rUpdateFlag har samma värde som 1
@@ -152,8 +189,10 @@ updateloop:
 
 contUpdate:
 
+	.DEF rXvalue = r17
+	.DEF rYvalue = r19
+
 	ldi rUpdatedelay, 0b00000000 ; utan denna rad så kommer ingen rendering ske under updateloop
-	ldi rTemp2, 0
 ; Välj x-axel 
  	ldi rTemp, 0x00 
  	lds rTemp, ADMUX 
@@ -200,7 +239,7 @@ iterate_x:
  	nop 
  
  
- 	lds rTemp2, ADCH		; Läs av resultat 
+ 	lds rYvalue, ADCH		; Läs av resultat 
 
 
 	cpi rXvalue, 165	; Deadzone (var 165)
@@ -210,11 +249,11 @@ iterate_x:
  	cpi rXvalue, 91		
  	brlo go_right 
 
-	cpi rTemp2, 165 
+	cpi rYvalue, 165 
  	brsh go_up 
  
  
- 	cpi rTemp2, 91 
+ 	cpi rYvalue, 91 
  	brlo go_down 
 	
 
@@ -236,9 +275,9 @@ iterate_x:
 		
 
 checkdir:
-		ldi YH, 0
-		ldi YL, 0
-		ldi rCounter, 0
+
+		.UNDEF rXvalue
+		.UNDEF rYvalue
 		
 
 
@@ -246,7 +285,7 @@ checkdir:
 checkdircont:
 
 		cpi rDirection, 0
-		breq donedir
+		breq done1
 		
 		cpi rDirection, 1
 		breq left
@@ -261,165 +300,188 @@ checkdircont:
 		breq down
 		
 		jmp outsidecheckdone
-		
-		donedir:
-		jmp main
+
+		done1:
+		ret
 
 		left:
-		ld rTemp2, Y
-		cpi rTemp2, 128
+		ld rTemp, Y
+		cpi rTemp, 128
 		brsh outsideleft
 
-		lsl rTemp2
+		lsl rTemp
 		jmp outsidecheckdone
 		
 		
 
 		right:
-		ld rTemp2, Y
-		cpi rTemp2, 2
+		ld rTemp, Y
+		cpi rTemp, 2
 		brlo outsideright
 
-		lsr rTemp2
+		lsr rTemp
 		jmp outsidecheckdone
 			
 		up:
 		inc YL
-		ld rTemp2, Y
-		cpi rTemp2, 2
+		ld rTemp, Y
+		cpi rTemp, 2
 		brlo outsideup
 		
-		lsr rTemp2
+		lsr rTemp
 		jmp outsidecheckdone
 
 
 		down:
 		inc YL
-		ld rTemp2, Y
-		cpi rTemp2, 128
+		ld rTemp, Y
+		cpi rTemp, 128
 		brsh outsidedown
 		
-		lsl rTemp2
+		lsl rTemp
 		jmp outsidecheckdone
  
 
  
  
  	outsideleft:
-	ldi rTemp2, 1 
+	ldi rTemp, 1 
 	jmp outsidecheckdone
 
  	outsideright:
-	ldi rTemp2, 128
+	ldi rTemp, 128
 	jmp outsidecheckdone
 		
 	outsideup:
-	ldi rTemp2, 128
+	ldi rTemp, 128
 	jmp outsidecheckdone
 
 	outsidedown: 
-	ldi rTemp2, 1
-	
+	ldi rTemp, 1
+
 	
 
 outsidecheckdone: 
+	.DEF rBuffer = r17
+/*  0,1 2,3 4,5                  */
 
 	cpi rDirection, 4
 	brsh updown
 	
+	leftright:	
 	inc YL
+	ld rBuffer, Y
 	inc YL
-	st Y, rTemp2
-	inc rCounter
-	cp rCounter, rLength
-	breq done
- 
- 	jmp checkdircont 
+
+	cpi YL, 6
+	breq resetYLforX
+
+	st Y+, rTemp
+	st Y, rBuffer
+	dec YL
+
+
+	jmp main
+	resetYLforX:
+
+	ldi YL, 0
+
+	st Y+, rTemp
+	st Y, rBuffer
+	dec YL
+
+	jmp main
 
 	updown:
-	inc YL
-	inc YL
-	st Y, rTemp2
-	inc rCounter
-	cp rCounter, rLength
-	breq done
 
+	dec YL
+	ld rBuffer, Y+
+
+	inc YL
+	inc YL
+	cpi YL, 7
+	breq resetYLforY
+
+	st Y, rTemp
+	dec YL
+	st Y, rBuffer
+	jmp main
 	
-	jmp checkdircont
-	
+	resetYLforY:
+	ldi YL, 0
+	st Y, rBuffer
+	inc YL
+	st Y, rTemp
+	dec YL
+	jmp main
+
+	.UNDEF rBuffer
 done:
 	ret
-	;jmp main
 
 Laddarad: 
-
-	;ldi YH, 0
-	;ldi YL, 0
+	.DEF rTempPortBuffer = r17
 
 
  
  	in rTemp, PORTD 
-	ld rTemp2, Y+ 
+	ld rTempPortBuffer, Z+ 
 
-
-	
-	bst rTemp2, 7 
+	bst rTempPortBuffer, 7 
  	bld rTemp, 6 
-	bst rTemp2, 6 
+	bst rTempPortBuffer, 6 
 	bld rTemp, 7 
  	out PORTD, rTemp 
 
  	in rTemp, PORTB 
 	 
- 	bst rTemp2, 5 
+ 	bst rTempPortBuffer, 5 
  	bld rTemp, 0 
- 	bst rTemp2, 4 
+ 	bst rTempPortBuffer, 4 
  	bld rTemp, 1 
- 	bst rTemp2, 3 
+ 	bst rTempPortBuffer, 3 
  	bld rTemp, 2 
- 	bst rTemp2, 2 
+ 	bst rTempPortBuffer, 2 
  	bld rTemp, 3 
- 	bst rTemp2, 1 
+ 	bst rTempPortBuffer, 1 
  	bld rTemp, 4 
- 	bst rTemp2, 0 
+ 	bst rTempPortBuffer, 0 
  	bld rTemp, 5 
 	 
  	out PORTB, rTemp  
- 
+	.UNDEF rTempPortBuffer 
  	ret 
 
 Laddarader: 
- 
- 	in rTemp, PORTC 
-	ld rTemp2, Y+
+	.DEF rTempPortBuffer = r17
 
-	bst rTemp2, 0 
+ 	in rTemp, PORTC 
+	ld rTempPortBuffer, Z+
+
+	bst rTempPortBuffer, 0 
  	bld rTemp, 0
-	bst rTemp2, 1 
+	bst rTempPortBuffer, 1 
 	bld rTemp, 1
-	bst rTemp2, 2
+	bst rTempPortBuffer, 2
 	bld rTemp, 2
-	bst rTemp2, 3
+	bst rTempPortBuffer, 3
 	bld rTemp, 3
 	out PORTC, rTemp 
 
  	in rTemp, PORTD 
 	 
- 	bst rTemp2, 4 
+ 	bst rTempPortBuffer, 4 
  	bld rTemp, 2 
- 	bst rTemp2, 5 
+ 	bst rTempPortBuffer, 5 
  	bld rTemp, 3 
- 	bst rTemp2, 6 
+ 	bst rTempPortBuffer, 6 
  	bld rTemp, 4 
- 	bst rTemp2, 7 
+ 	bst rTempPortBuffer, 7 
  	bld rTemp, 5	 
  	out PORTD, rTemp  
  
-	/*cp YL, rLength
-	breq done
-	jmp Laddarad*/
 
-
+	.UNDEF rTempPortBuffer
  	ret 
 
 
