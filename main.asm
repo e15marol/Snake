@@ -19,14 +19,14 @@
 	/* Lediga Register 
 	r17
 	r19
-	r21
 	
 	
 	*/
 
 ; Datasegment
 	.DSEG
-	matrix: .BYTE 8
+	matrix: .BYTE 64
+	mat: .BYTE 2
 	;snake: .BYTE 25
 	;apple: .BYTE 25
 
@@ -94,6 +94,8 @@ init:
 	ldi ZH, HIGH(matrix)
 	ldi ZL, LOW(matrix)
 
+	ldi XH, HIGH(mat)
+	ldi XL, LOW(mat)
 
 	ldi rTemp, 0
 	out PORTB, rTemp
@@ -103,7 +105,9 @@ init:
 	ldi rUpdateDelay, 0b00000000
 	ldi rDirection, 0b00000000
 	ldi rCounter, 0b00000000
-	ldi rLength, 1
+	ldi rLength, 2
+
+	
 
 	rcall clear 	
 
@@ -134,9 +138,22 @@ init:
 	.UNDEF rYkord
 	.UNDEF rXKord
 
-	.DEF YLvalue = r25
-	ldi YLvalue, 0
+	.DEF rComp = r25
+	ldi rComp, 6
+	.DEF FinnsDetMat = r21
 
+	ldi FinnsDetMat, 1
+
+	ldi XH, 0
+	ldi XL, 0
+
+	ldi rTemp, 0b00100000
+
+	st X+, rTemp
+
+	ldi rTemp, 0b00100000
+
+	st X, rTemp
 	ldi YH, 0
 	ldi YL, 0
 
@@ -145,11 +162,11 @@ init:
 main:
 
 	ldi rCounter, 0
-
+	ldi XL, 0
 
 	mainCont:
 	
-	cpi ZL, 6
+	cp ZL, rComp
 	brlo ladda
 
 	resetZL:
@@ -160,10 +177,13 @@ main:
 	ladda:
 	rcall laddarad
 	rcall laddarader
-	rcall clear
+	rcall laddamat
 
+
+
+	rcall clear
 	inc rCounter
-	cpi rCounter, 2
+	cp rCounter, rLength
 	breq update
 
 
@@ -240,7 +260,7 @@ iterate_x:
  
  
  	lds rYvalue, ADCH		; Läs av resultat 
-
+	rcall kontrolleraMat
 
 	cpi rXvalue, 165	; Deadzone (var 165)
  	brsh go_left 
@@ -373,7 +393,7 @@ outsidecheckdone:
 	ld rBuffer, Y
 	inc YL
 
-	cpi YL, 6
+	cp YL, rComp
 	breq resetYLforX
 
 	st Y+, rTemp
@@ -399,8 +419,8 @@ outsidecheckdone:
 
 	inc YL
 	inc YL
-	cpi YL, 7
-	breq resetYLforY
+	cp YL, rComp 
+	brsh resetYLforY
 
 	st Y, rTemp
 	dec YL
@@ -425,7 +445,7 @@ Laddarad:
 
  
  	in rTemp, PORTD 
-	ld rTempPortBuffer, Z+ 
+	ld rTempPortBuffer, Z+
 
 	bst rTempPortBuffer, 7 
  	bld rTemp, 6 
@@ -484,7 +504,90 @@ Laddarader:
 	.UNDEF rTempPortBuffer
  	ret 
 
+laddamat:
 
+	.DEF rTempPortBuffer = r17
+	.DEF rTemp2 = r19
+	cpi FinnsDetMat, 0
+	breq skipladdamat
+	ldi XL, 0
+
+
+	in rTemp, PORTD 
+	ld rTempPortBuffer, X+ 
+
+	bst rTempPortBuffer, 7 
+ 	bld rTemp2, 6 
+	bst rTempPortBuffer, 6 
+	bld rTemp2, 7
+	or rTemp, rTemp2 
+ 	out PORTD, rTemp 
+
+ 	in rTemp, PORTB 
+	 
+ 	bst rTempPortBuffer, 5 
+ 	bld rTemp2, 0 
+ 	bst rTempPortBuffer, 4 
+ 	bld rTemp2, 1 
+ 	bst rTempPortBuffer, 3 
+ 	bld rTemp2, 2 
+ 	bst rTempPortBuffer, 2 
+ 	bld rTemp2, 3 
+ 	bst rTempPortBuffer, 1 
+ 	bld rTemp2, 4 
+ 	bst rTempPortBuffer, 0 
+ 	bld rTemp2, 5 
+	 
+	or rTemp, rTemp2
+
+ 	out PORTB, rTemp
+
+
+ 	in rTemp, PORTC 
+	ld rTempPortBuffer, X+
+
+	bst rTempPortBuffer, 0 
+ 	bld rTemp2, 0
+	bst rTempPortBuffer, 1 
+	bld rTemp2, 1
+	bst rTempPortBuffer, 2
+	bld rTemp2, 2
+	bst rTempPortBuffer, 3
+	bld rTemp2, 3
+	or rTemp, rTemp2
+	out PORTC, rTemp 
+
+ 	in rTemp, PORTD 
+	 
+ 	bst rTempPortBuffer, 4 
+ 	bld rTemp2, 2 
+ 	bst rTempPortBuffer, 5 
+ 	bld rTemp2, 3 
+ 	bst rTempPortBuffer, 6 
+ 	bld rTemp2, 4 
+ 	bst rTempPortBuffer, 7 
+ 	bld rTemp2, 5
+	or rTemp, rTemp2	 
+ 	out PORTD, rTemp  
+ 
+
+
+	skipladdamat:
+	.UNDEF rTemp2
+	.UNDEF rTempPortBuffer
+	ret
+
+kontrolleraMat:
+	cpi FinnsDetMat, 1
+	breq Return
+	ldi XL, 0
+
+	st X+, r19
+	st X, r17
+	ldi FinnsDetMat, 1
+
+	Return:
+	ret
 
 clear:
 
@@ -511,3 +614,7 @@ clear:
 isr_timerOF:
 	ldi rUpdateFlag, 0b00000001
 	reti
+
+
+
+
