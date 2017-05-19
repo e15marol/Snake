@@ -6,7 +6,7 @@
 ;
 
 
-;avrdude -C "C:\WinAVR-20100110\bin\avrdude.conf" -patmega328p -Pcom4 -carduino -b115200 -Uflash:w:Snake.hex
+;avrdude -C "C:\WinAVR-20100110\bin\avrdude.conf" -patmega328p -Pcom4 -carduino -b115200 -Uflash:w:SnakeBuild.hex
 
 ; Registerdefinitioner
 	.DEF rTemp			= r16
@@ -25,10 +25,15 @@
 
 ; Datasegment
 	.DSEG
+<<<<<<< HEAD
 	matrix: .BYTE 64
 	mat: .BYTE 2
 	;snake: .BYTE 25
 	;apple: .BYTE 25
+=======
+	matrix: .BYTE 8
+	
+>>>>>>> origin/master
 
 	.CSEG
 	// Interrupt vector table 
@@ -98,7 +103,7 @@ init:
 	ldi XL, LOW(mat)
 
 	ldi rTemp, 0
-	out PORTB, rTemp
+	out PORTB, rTemp ; Aktivering av alla rader
 	out PORTC, rTemp
 	out PORTD, rTemp
 
@@ -164,7 +169,7 @@ main:
 	ldi rCounter, 0
 	ldi XL, 0
 
-	mainCont:
+	mainCont: ; Denna label kontrollerar ifall 
 	
 	cp ZL, rComp
 	brlo ladda
@@ -322,7 +327,7 @@ checkdircont:
 		jmp outsidecheckdone
 
 		done1:
-		ret
+		ret ; Subrutin returnering ifall det saknas en direction
 
 		left:
 		ld rTemp, Y
