@@ -11,7 +11,7 @@
 ; Registerdefinitioner
 	.DEF rTemp			= r16
 	.DEF rDirection		= r18
-	.DEF rLength		= r20	
+	.DEF rRandom		= r20	
 	.DEF rUpdateFlag	= r22
 	.DEF rUpdateDelay	= r23
 	.DEF rCounter       = r24
@@ -106,7 +106,7 @@ init:
 	ldi rUpdateDelay, 0b00000000
 	ldi rDirection, 0b00000000
 	ldi rCounter, 0b00000000
-	ldi rLength, 2
+	ldi rRandom, 0
 
 	
 
@@ -147,36 +147,24 @@ init:
 
 	ldi XH, 0
 	ldi XL, 0
+	
+	ldi r26, 0b00100000
+	ldi r27, 0b00100000
 
-	ldi rTemp, 0b00100000
-
-	st X+, rTemp
-
-	ldi rTemp, 0b00100000
-
-	st X, rTemp
+	
 	ldi YH, 0
 	ldi YL, 0
 
 	ldi ZH, 0
 	ldi ZL, 0
 main:
-	.DEF rTemp2 = r17
 	ldi rCounter, 0
-	ldi XL, 0
-	/*
-	mainCont: ; Denna label kontrollerar ifall 
-	
-	cp ZL, rComp
-	brlo ladda
-
-	resetZL:
-	ldi ZL, 0
-	jmp mainCont
-	*/
 	ldi ZL, 1
 	
-	
+	.DEF rTemp2 = r17
+
+
+
 	ladda:
 
 
@@ -207,6 +195,7 @@ main:
 
 	dec ZL
 	rcall laddakord
+
 	rcall clear
 	inc rCounter
 	cpi rCounter, 7
@@ -227,27 +216,14 @@ main:
 	
 	
 	OutOfMain:
+	cpi FinnsDetMat, 0
+	breq update
+	rcall RenderaMat
+	rcall clear
 	jmp update
 	
 	
 	
-
-	/*
-
-	rcall laddarad
-	rcall laddarader
-;	rcall laddamat
-
-
-
-	rcall clear
-	inc rCounter
-	cp rCounter, rLength
-	breq update
-	
-
-	jmp mainCont
-	*/
 	update:
 	.UNDEF rTemp2
 	cpi rUpdateFlag, 1 ;Jämför om rUpdateFlag är detsamma som värdet 1
@@ -258,7 +234,7 @@ main:
 
 updateloop: 
 	inc rUpdateDelay ;Inkrementering av rUpdateDelay
-	cpi rUpdateDelay, 15 ; Uppdaterar efter var 15:e interrupt
+	cpi rUpdateDelay, 20 ; Uppdaterar efter var 15:e interrupt
 	brne skip ; Om inte 15 interrupts inte har gått så skippas contUpdate
 	rcall contUpdate
 	skip:
@@ -361,6 +337,7 @@ checkdir:
 
 
 
+
 checkdircont:
 
 		cpi rDirection, 0
@@ -397,7 +374,7 @@ checkdircont:
 		ld rTemp, Y
 		cpi rTemp, 2
 		brlo outsideright
-
+		
 		lsr rTemp
 		jmp outsidecheckdone
 			
@@ -460,7 +437,7 @@ outsidecheckdone:
 	dec YL
 
 
-	jmp main
+	jmp jumpMain
 	resetYLforX:
 
 	ldi YL, 0
@@ -469,7 +446,7 @@ outsidecheckdone:
 	st Y, rBuffer
 	dec YL
 
-	jmp main
+	jmp jumpMain
 
 	updown:
 
@@ -484,7 +461,7 @@ outsidecheckdone:
 	st Y, rTemp
 	dec YL
 	st Y, rBuffer
-	jmp main
+	jmp jumpMain
 	
 	resetYLforY:
 	ldi YL, 0
@@ -492,172 +469,85 @@ outsidecheckdone:
 	inc YL
 	st Y, rTemp
 	dec YL
-	jmp main
+	jmp jumpMain
 
+
+
+
+	jumpMain:
 	.UNDEF rBuffer
+
+	collisionCheck:
+	.DEF HeadX = r17
+	.DEF HeadY = r19
+
+	ld HeadX, Y+
+	ld HeadY, Y
+	dec YL
+
+	cp HeadX, r26
+	breq CollisionCont
+	jmp CollisionDone
+
+	CollisionCont:
+	cp HeadY, r27
+	breq CollisionTrue
+	jmp CollisionDone
+
+	CollisionTrue:
+	ldi FinnsDetMat, 0
+	inc rComp
+	inc rComp
+	;inc rLength
+	CollisionDone:
+	.UNDEF HeadX
+	.UNDEF HeadY
+
+	jmp main
+	
 done:
 	ret
-	/*
-Laddarad: 
-	.DEF rTempPortBuffer = r17
-	.DEF rTemp2 = r19
-	ldi XL, 0
 
- 
- 	in rTemp, PORTD 
-	ld rTempPortBuffer, Z+
-	ld rTemp2, X+
-
-	;cpi rCounter, 1
-	;brsh skipOr
-	or rTempPortBuffer, rTemp2
-
-	skipOr:
-	bst rTempPortBuffer, 7 
- 	bld rTemp, 6 
-	bst rTempPortBuffer, 6 
-	bld rTemp, 7 
- 	out PORTD, rTemp 
-
- 	in rTemp, PORTB 
-	 
- 	bst rTempPortBuffer, 5 
- 	bld rTemp, 0 
- 	bst rTempPortBuffer, 4 
- 	bld rTemp, 1 
- 	bst rTempPortBuffer, 3 
- 	bld rTemp, 2 
- 	bst rTempPortBuffer, 2 
- 	bld rTemp, 3 
- 	bst rTempPortBuffer, 1 
- 	bld rTemp, 4 
- 	bst rTempPortBuffer, 0 
- 	bld rTemp, 5 
-	 
- 	out PORTB, rTemp  
-	.UNDEF rTempPortBuffer 
-	.UNDEF rTemp2
- 	ret 
-
-Laddarader: 
-	.DEF rTempPortBuffer = r17
-	.DEF rTemp2 = r19
-
- 	in rTemp, PORTC 
-	ld rTempPortBuffer, Z+
-	ld rTemp2, X+
-
-	cpi rCounter, 1
-	brsh skipOr2
-	or rTempPortBuffer, rTemp2
-
-	skipOr2:
-	bst rTempPortBuffer, 0 
- 	bld rTemp, 0
-	bst rTempPortBuffer, 1 
-	bld rTemp, 1
-	bst rTempPortBuffer, 2
-	bld rTemp, 2
-	bst rTempPortBuffer, 3
-	bld rTemp, 3
-	out PORTC, rTemp 
-
- 	in rTemp, PORTD 
-	 
- 	bst rTempPortBuffer, 4 
- 	bld rTemp, 2 
- 	bst rTempPortBuffer, 5 
- 	bld rTemp, 3 
- 	bst rTempPortBuffer, 6 
- 	bld rTemp, 4 
- 	bst rTempPortBuffer, 7 
- 	bld rTemp, 5	 
- 	out PORTD, rTemp  
- 
-
-	.UNDEF rTempPortBuffer
- 	ret */
-	/*
-laddamat:
-
-	.DEF rTempPortBuffer = r17
-	.DEF rTemp2 = r19
-	cpi FinnsDetMat, 0
-	breq skipladdamat
-	ldi XL, 0
-
-
-	in rTemp, PORTD 
-	ld rTempPortBuffer, X+ 
-
-	bst rTempPortBuffer, 7 
- 	bld rTemp2, 6 
-	bst rTempPortBuffer, 6 
-	bld rTemp2, 7
-	or rTemp, rTemp2 
- 	out PORTD, rTemp 
-
- 	in rTemp, PORTB 
-	 
- 	bst rTempPortBuffer, 5 
- 	bld rTemp2, 0 
- 	bst rTempPortBuffer, 4 
- 	bld rTemp2, 1 
- 	bst rTempPortBuffer, 3 
- 	bld rTemp2, 2 
- 	bst rTempPortBuffer, 2 
- 	bld rTemp2, 3 
- 	bst rTempPortBuffer, 1 
- 	bld rTemp2, 4 
- 	bst rTempPortBuffer, 0 
- 	bld rTemp2, 5 
-	 
-	or rTemp, rTemp2
-
- 	out PORTB, rTemp
-
-
- 	in rTemp, PORTC 
-	ld rTempPortBuffer, X+
-
-	bst rTempPortBuffer, 0 
- 	bld rTemp2, 0
-	bst rTempPortBuffer, 1 
-	bld rTemp2, 1
-	bst rTempPortBuffer, 2
-	bld rTemp2, 2
-	bst rTempPortBuffer, 3
-	bld rTemp2, 3
-	or rTemp, rTemp2
-	out PORTC, rTemp 
-
- 	in rTemp, PORTD 
-	 
- 	bst rTempPortBuffer, 4 
- 	bld rTemp2, 2 
- 	bst rTempPortBuffer, 5 
- 	bld rTemp2, 3 
- 	bst rTempPortBuffer, 6 
- 	bld rTemp2, 4 
- 	bst rTempPortBuffer, 7 
- 	bld rTemp2, 5
-	or rTemp, rTemp2	 
- 	out PORTD, rTemp  
- 
-
-
-	skipladdamat:
-	.UNDEF rTemp2
-	.UNDEF rTempPortBuffer
-	ret
-	*/
 kontrolleraMat:
+	add rRandom, r17
+	add rRandom, r19
 	cpi FinnsDetMat, 1
 	breq Return
-	ldi XL, 0
+	// r17 = X värdet från Joystick //
 
-	st X+, r19
-	st X, r17
+	ldi r26, 8
+	ldi r27, 8
+	
+
+	SBRC rRandom, 0
+	lsl r26
+	SBRC rRandom, 1
+	lsl r26
+	SBRC rRandom, 2
+	lsr r26
+	SBRC rRandom, 3
+	lsl r26
+	SBRC rRandom, 4
+	lsr r26
+	SBRC rRandom, 5
+	lsl r26
+	SBRC rRandom, 6
+	lsr r26
+
+	SBRC rRandom, 0
+	lsl r27
+	SBRC rRandom, 1
+	lsl r27
+	SBRC rRandom, 2
+	lsr r27
+	SBRC rRandom, 3
+	lsl r27
+	SBRC rRandom, 4
+	lsr r27
+	SBRC rRandom, 5
+	lsl r27
+	SBRC rRandom, 6
+	lsr r27
 	ldi FinnsDetMat, 1
 
 	Return:
@@ -754,5 +644,69 @@ laddaRaden:
  	bst rY, 7 
  	bld rTemp, 5	 
  	out PORTD, rTemp
+	.UNDEF rY
 	
 	ret  
+
+RenderaMat:
+	.DEF rX = r17
+
+	in rTemp, PORTD
+	mov rX, r26
+
+	bst rX, 7 
+ 	bld rTemp, 6 
+	bst rX, 6 
+	bld rTemp, 7 
+ 	out PORTD, rTemp 
+
+ 	in rTemp, PORTB 
+	 
+ 	bst rX, 5 
+ 	bld rTemp, 0 
+ 	bst rX, 4 
+ 	bld rTemp, 1 
+ 	bst rX, 3 
+ 	bld rTemp, 2 
+ 	bst rX, 2 
+ 	bld rTemp, 3 
+ 	bst rX, 1 
+ 	bld rTemp, 4 
+ 	bst rX, 0 
+ 	bld rTemp, 5 
+	 
+ 	out PORTB, rTemp  
+
+	.UNDEF rX
+	.DEF rY = r17
+
+	in rTemp, PORTC 
+	mov rY, r27
+
+
+	
+	bst rY, 0 
+ 	bld rTemp, 0
+	bst rY, 1 
+	bld rTemp, 1
+	bst rY, 2
+	bld rTemp, 2
+	bst rY, 3
+	bld rTemp, 3
+	out PORTC, rTemp 
+
+ 	in rTemp, PORTD 
+	 
+ 	bst rY, 4 
+ 	bld rTemp, 2 
+ 	bst rY, 5 
+ 	bld rTemp, 3 
+ 	bst rY, 6 
+ 	bld rTemp, 4 
+ 	bst rY, 7 
+ 	bld rTemp, 5	 
+ 	out PORTD, rTemp
+
+
+	.UNDEF rY
+ret 
