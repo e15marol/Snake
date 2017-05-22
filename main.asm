@@ -25,15 +25,11 @@
 
 ; Datasegment
 	.DSEG
-<<<<<<< HEAD
-	matrix: .BYTE 64
+
+	matrix: .BYTE 32
 	mat: .BYTE 2
-	;snake: .BYTE 25
-	;apple: .BYTE 25
-=======
-	matrix: .BYTE 8
+
 	
->>>>>>> origin/master
 
 	.CSEG
 	// Interrupt vector table 
@@ -165,10 +161,10 @@ init:
 	ldi ZH, 0
 	ldi ZL, 0
 main:
-
+	.DEF rTemp2 = r17
 	ldi rCounter, 0
 	ldi XL, 0
-
+	/*
 	mainCont: ; Denna label kontrollerar ifall 
 	
 	cp ZL, rComp
@@ -177,12 +173,70 @@ main:
 	resetZL:
 	ldi ZL, 0
 	jmp mainCont
-
-
+	*/
+	ldi ZL, 1
+	
+	
 	ladda:
+
+
+	// Test med att ladda för varje kord //
+	
+	
+	ld rTemp2, Z
+	cpi rTemp2, 1
+	brsh laddaCont
+
+
+	inc rCounter
+	cpi rCounter, 7
+	brsh OutOfMain
+
+
+	jmp ladda
+
+
+
+
+
+
+	laddaCont:
+
+	rcall laddaraden
+
+
+	dec ZL
+	rcall laddakord
+	rcall clear
+	inc rCounter
+	cpi rCounter, 7
+	brsh OutOfMain
+
+
+	inc ZL
+	cp ZL, RComp
+	brlo noReset
+
+	ldi ZL, 1
+	jmp ladda
+	
+	noReset:
+	inc ZL
+	
+	jmp ladda
+	
+	
+	OutOfMain:
+	jmp update
+	
+	
+	
+
+	/*
+
 	rcall laddarad
 	rcall laddarader
-	rcall laddamat
+;	rcall laddamat
 
 
 
@@ -190,12 +244,12 @@ main:
 	inc rCounter
 	cp rCounter, rLength
 	breq update
-
+	
 
 	jmp mainCont
-
+	*/
 	update:
-
+	.UNDEF rTemp2
 	cpi rUpdateFlag, 1 ;Jämför om rUpdateFlag är detsamma som värdet 1
 	breq updateloop ;Branchar till updateloop ifall rUpdateFlag har samma värde som 1
 
@@ -310,7 +364,7 @@ checkdir:
 checkdircont:
 
 		cpi rDirection, 0
-		breq done1
+		breq noDirection
 		
 		cpi rDirection, 1
 		breq left
@@ -326,7 +380,7 @@ checkdircont:
 		
 		jmp outsidecheckdone
 
-		done1:
+		noDirection:
 		ret ; Subrutin returnering ifall det saknas en direction
 
 		left:
@@ -443,15 +497,22 @@ outsidecheckdone:
 	.UNDEF rBuffer
 done:
 	ret
-
+	/*
 Laddarad: 
 	.DEF rTempPortBuffer = r17
-
+	.DEF rTemp2 = r19
+	ldi XL, 0
 
  
  	in rTemp, PORTD 
 	ld rTempPortBuffer, Z+
+	ld rTemp2, X+
 
+	;cpi rCounter, 1
+	;brsh skipOr
+	or rTempPortBuffer, rTemp2
+
+	skipOr:
 	bst rTempPortBuffer, 7 
  	bld rTemp, 6 
 	bst rTempPortBuffer, 6 
@@ -475,14 +536,22 @@ Laddarad:
 	 
  	out PORTB, rTemp  
 	.UNDEF rTempPortBuffer 
+	.UNDEF rTemp2
  	ret 
 
 Laddarader: 
 	.DEF rTempPortBuffer = r17
+	.DEF rTemp2 = r19
 
  	in rTemp, PORTC 
 	ld rTempPortBuffer, Z+
+	ld rTemp2, X+
 
+	cpi rCounter, 1
+	brsh skipOr2
+	or rTempPortBuffer, rTemp2
+
+	skipOr2:
 	bst rTempPortBuffer, 0 
  	bld rTemp, 0
 	bst rTempPortBuffer, 1 
@@ -507,8 +576,8 @@ Laddarader:
  
 
 	.UNDEF rTempPortBuffer
- 	ret 
-
+ 	ret */
+	/*
 laddamat:
 
 	.DEF rTempPortBuffer = r17
@@ -581,7 +650,7 @@ laddamat:
 	.UNDEF rTemp2
 	.UNDEF rTempPortBuffer
 	ret
-
+	*/
 kontrolleraMat:
 	cpi FinnsDetMat, 1
 	breq Return
@@ -623,3 +692,67 @@ isr_timerOF:
 
 
 
+laddakord:
+	.DEF rX = r17
+	
+	in rTemp, PORTD
+	ld rX, Z+
+
+	bst rX, 7 
+ 	bld rTemp, 6 
+	bst rX, 6 
+	bld rTemp, 7 
+ 	out PORTD, rTemp 
+
+ 	in rTemp, PORTB 
+	 
+ 	bst rX, 5 
+ 	bld rTemp, 0 
+ 	bst rX, 4 
+ 	bld rTemp, 1 
+ 	bst rX, 3 
+ 	bld rTemp, 2 
+ 	bst rX, 2 
+ 	bld rTemp, 3 
+ 	bst rX, 1 
+ 	bld rTemp, 4 
+ 	bst rX, 0 
+ 	bld rTemp, 5 
+	 
+ 	out PORTB, rTemp  
+
+
+	.UNDEF rX
+ret
+
+laddaRaden:
+	.DEF rY = r17
+
+	in rTemp, PORTC 
+	ld rY, Z
+
+
+	
+	bst rY, 0 
+ 	bld rTemp, 0
+	bst rY, 1 
+	bld rTemp, 1
+	bst rY, 2
+	bld rTemp, 2
+	bst rY, 3
+	bld rTemp, 3
+	out PORTC, rTemp 
+
+ 	in rTemp, PORTD 
+	 
+ 	bst rY, 4 
+ 	bld rTemp, 2 
+ 	bst rY, 5 
+ 	bld rTemp, 3 
+ 	bst rY, 6 
+ 	bld rTemp, 4 
+ 	bst rY, 7 
+ 	bld rTemp, 5	 
+ 	out PORTD, rTemp
+	
+	ret  
