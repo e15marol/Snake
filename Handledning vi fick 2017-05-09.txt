@@ -11,3 +11,6 @@ göra en array med kordinater istället för en variabel
 
 Kristians anteckningar:
 x är jämna nummer i Y 
+
+2017-05-22
+Kontrollera vid rendering om maten finns
