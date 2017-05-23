@@ -94,9 +94,9 @@ init:
 
 	ldi ZH, HIGH(matrix)
 	ldi ZL, LOW(matrix)
-
+	/*
 	ldi XH, HIGH(mat)
-	ldi XL, LOW(mat)
+	ldi XL, LOW(mat)*/
 
 	ldi rTemp, 0
 	out PORTB, rTemp ; Aktivering av alla rader
