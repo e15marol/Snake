@@ -496,7 +496,7 @@ outsidecheckdone:
 	collisionCheck:
 	.DEF HeadX = r17
 	.DEF HeadY = r19
-	ldi rCounter, 0
+	ldi rCounter, 2
 	
 	ld HeadX, Y+
 	ld HeadY, Y
@@ -521,27 +521,41 @@ outsidecheckdone:
 	inc YL
 	inc YL
 
-	// 0,1 2,3 4,5
+	// 0,1* 2,3 4,5
 	KontrolleraKroppCont:
 	
-	ld r13, Y+
-	ld r14, Y+
 
+
+	
+	
+	
+	ld rTemp, Y+
+	
 	cp YL, rComp
-	brne Cont
-
+	brlo Cont
+	/*
 	ldi YH, HIGH(matrix)
 	ldi YL, LOW(matrix)
+	*/
+	ldi YL, 1
+	
 
 	Cont:
-	cp HeadX, r13
-	brne NextCheck
-	cp HeadY, r14
-	brne NextCheck
+	cp HeadX, rTemp
+	breq CheckY
+	jmp NextCheck
+	CheckY:
+	ld rTemp, Y
+	cp HeadY, rTemp
+	breq Reset
+	jmp NextCheck
+	Reset:
 	jmp ResetGame
-
+	
 
 	NextCheck:
+	inc YL
+	inc rCounter
 	inc rCounter
 	cp rCounter, rComp
 	breq CollisionDone
@@ -550,6 +564,12 @@ outsidecheckdone:
 
 
 	CollisionDone:
+	cp YL, rComp
+	brne Cont3
+
+	ldi YH, HIGH(matrix)
+	ldi YL, LOW(matrix)
+	cont3:
 	.UNDEF HeadX
 	.UNDEF HeadY
 	jmp main
