@@ -26,8 +26,7 @@
 ; Datasegment
 	.DSEG
 
-	matrix: .BYTE 32
-	mat: .BYTE 2
+	matrix: .BYTE 64
 
 	
 
@@ -94,21 +93,24 @@ init:
 
 	ldi ZH, HIGH(matrix)
 	ldi ZL, LOW(matrix)
-	/*
-	ldi XH, HIGH(mat)
-	ldi XL, LOW(mat)*/
 
 	ldi rTemp, 0
 	out PORTB, rTemp ; Aktivering av alla rader
 	out PORTC, rTemp
 	out PORTD, rTemp
-
+	resetGame:
 	ldi rUpdateDelay, 0b00000000
 	ldi rDirection, 0b00000000
 	ldi rCounter, 0b00000000
 	ldi rRandom, 0
 
 	
+	nollaMatrix:
+	st Y+, rTemp
+	inc rCounter
+	cpi rCounter, 64
+	brlo nollaMatrix
+
 
 	rcall clear 	
 
@@ -118,8 +120,8 @@ init:
 	ldi rXkord, 16
 	ldi rYkord, 2
 
-	ldi YH, 0
-	ldi YL, 0
+	ldi YH, HIGH(matrix)
+	ldi YL, LOW(matrix)
 
 	st Y+, rXkord
 	st Y+, rYkord
@@ -144,19 +146,16 @@ init:
 	.DEF FinnsDetMat = r21
 
 	ldi FinnsDetMat, 1
-
-	ldi XH, 0
-	ldi XL, 0
-	
+		
 	ldi r26, 0b00100000
 	ldi r27, 0b00100000
 
 	
-	ldi YH, 0
-	ldi YL, 0
+	ldi YH, HIGH(matrix)
+	ldi YL, LOW(matrix)
 
-	ldi ZH, 0
-	ldi ZL, 0
+	ldi ZH, HIGH(matrix)
+	ldi ZL, LOW(matrix)
 main:
 	ldi rCounter, 0
 	ldi ZL, 1
@@ -177,7 +176,7 @@ main:
 
 
 	inc rCounter
-	cpi rCounter, 7
+	cp rCounter, rComp
 	brsh OutOfMain
 
 
@@ -196,9 +195,21 @@ main:
 	dec ZL
 	rcall laddakord
 
+	.DEF rLampDelay = r19
+	ldi rLampDelay, 0
+	ItereraLampor:
+	inc rLampDelay
+	cpi rLampDelay, 5
+	breq ClearLamps
+
+	jmp ItereraLampor
+	ClearLamps:
+
+
+	
 	rcall clear
 	inc rCounter
-	cpi rCounter, 7
+	cp rCounter, rComp
 	brsh OutOfMain
 
 
@@ -218,14 +229,17 @@ main:
 	OutOfMain:
 	cpi FinnsDetMat, 0
 	breq update
+
+
 	rcall RenderaMat
+
 	rcall clear
-	jmp update
 	
 	
 	
 	update:
 	.UNDEF rTemp2
+	.UNDEF rLampDelay
 	cpi rUpdateFlag, 1 ;Jämför om rUpdateFlag är detsamma som värdet 1
 	breq updateloop ;Branchar till updateloop ifall rUpdateFlag har samma värde som 1
 
@@ -477,32 +491,67 @@ outsidecheckdone:
 	jumpMain:
 	.UNDEF rBuffer
 
+	cpi FinnsDetMat, 0
+	breq KontrolleraKropp
 	collisionCheck:
 	.DEF HeadX = r17
 	.DEF HeadY = r19
-
+	ldi rCounter, 0
+	
 	ld HeadX, Y+
 	ld HeadY, Y
 	dec YL
 
+
 	cp HeadX, r26
 	breq CollisionCont
-	jmp CollisionDone
+	jmp KontrolleraKropp
 
 	CollisionCont:
 	cp HeadY, r27
 	breq CollisionTrue
-	jmp CollisionDone
+	jmp KontrolleraKropp
 
 	CollisionTrue:
 	ldi FinnsDetMat, 0
 	inc rComp
 	inc rComp
-	;inc rLength
+	jmp CollisionDone
+	KontrolleraKropp:
+	inc YL
+	inc YL
+
+	// 0,1 2,3 4,5
+	KontrolleraKroppCont:
+	
+	ld r13, Y+
+	ld r14, Y+
+
+	cp YL, rComp
+	brne Cont
+
+	ldi YH, HIGH(matrix)
+	ldi YL, LOW(matrix)
+
+	Cont:
+	cp HeadX, r13
+	brne NextCheck
+	cp HeadY, r14
+	brne NextCheck
+	jmp ResetGame
+
+
+	NextCheck:
+	inc rCounter
+	cp rCounter, rComp
+	breq CollisionDone
+	jmp KontrolleraKroppCont
+
+
+
 	CollisionDone:
 	.UNDEF HeadX
 	.UNDEF HeadY
-
 	jmp main
 	
 done:
@@ -513,41 +562,49 @@ kontrolleraMat:
 	add rRandom, r19
 	cpi FinnsDetMat, 1
 	breq Return
-	// r17 = X värdet från Joystick //
+	// r17 = X värdet från Joystick
+	// r19 = Y
 
-	ldi r26, 8
-	ldi r27, 8
+	ldi r26, 1
+	ldi r27, 1
 	
+	CheckNr1:
+	SBRS rRandom, 0
+	jmp CheckNr2
+	lsl r26
 
-	SBRC rRandom, 0
+	CheckNr2:
+	SBRS rRandom, 1
+	jmp CheckNr3
 	lsl r26
-	SBRC rRandom, 1
 	lsl r26
-	SBRC rRandom, 2
-	lsr r26
-	SBRC rRandom, 3
-	lsl r26
-	SBRC rRandom, 4
-	lsr r26
-	SBRC rRandom, 5
-	lsl r26
-	SBRC rRandom, 6
-	lsr r26
 
-	SBRC rRandom, 0
+	CheckNr3:
+	SBRS rRandom, 2
+	jmp CheckY1
+	lsl r26
+	lsl r26
+	lsl r26
+
+	CheckY1:
+	SBRS rRandom, 3
+	jmp CheckY2
 	lsl r27
-	SBRC rRandom, 1
+
+	CheckY2:
+	jmp CheckY3
 	lsl r27
-	SBRC rRandom, 2
-	lsr r27
-	SBRC rRandom, 3
 	lsl r27
-	SBRC rRandom, 4
-	lsr r27
-	SBRC rRandom, 5
+
+	CheckY3:
+	jmp DoneMat
 	lsl r27
-	SBRC rRandom, 6
-	lsr r27
+	lsl r27
+	lsl r27
+	
+	DoneMat:
+	
+	
 	ldi FinnsDetMat, 1
 
 	Return:
@@ -645,6 +702,7 @@ laddaRaden:
  	bld rTemp, 5	 
  	out PORTD, rTemp
 	.UNDEF rY
+
 	
 	ret  
 
@@ -709,4 +767,14 @@ RenderaMat:
 
 
 	.UNDEF rY
+	.DEF rLampDelay = r17
+	ldi rLampDelay, 0
+	ItereraMat:
+	inc rLampDelay
+	cpi rLampDelay, 5
+	breq ClearMat
+
+	jmp ItereraMat
+	ClearMat:
+	.UNDEF rLampDelay
 ret 
